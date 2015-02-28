@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <style>
-
-.land {
-  fill: #5180E3;
+body{
+  padding: 100px;
 }
 
+svg{
+  fill:#6293EC;
+}
 
-.state-boundary {
-  fill: none;
+path{
   stroke: #fff;
 }
 
@@ -22,7 +23,7 @@ var width = 960,
     height = 500;
 
 var projection = d3.geo.albersUsa()
-    .scale(1000)
+    .scale(1200)
     .translate([width / 2, height / 2]);
 
 var path = d3.geo.path()
@@ -32,17 +33,41 @@ var svg = d3.select("body").append("svg")
     .attr("width", width)
     .attr("height", height);
 
-d3.json("us.json", function(error, us) {
-  svg.insert("path", ".graticule")
-      .datum(topojson.feature(us, us.objects.land))
-      .attr("class", "land")
-      .attr("d", path);
+state = new Array();
 
-  svg.insert("path", ".graticule")
-      .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
-      .attr("class", "state-boundary")
-      .attr("d", path);
+for (var i = 0; i < 80; i++) {
+  state[i] = Array(0,0);
+};
+
+d3.csv("data.csv", function(error, data){
+          data.forEach(function(d){
+            originStateId = parseInt(d['ORIGIN_STATE_FIPS']);
+            destStateId = parseInt(d['DEST_STATE_FIPS']);
+            state[originStateId][1] += parseInt(d['PASSENGERS']);  //out
+            state[destStateId][0] += parseInt(d['PASSENGERS']);  //in
+          });
+          // console.log(state[1][1]);
+          // console.log(state[1][0]);
+          d3.json("us-states.json", function(json) {
+            svg.selectAll("path")
+               .data(json.features)
+               .enter()
+               .append("path")
+               .attr("class", "states")
+               .attr("d", path)
+               .style("fill", function(d) {
+                        // console.log(state);
+                        // console.log(d.id);
+                        if (state[parseInt(d.id)][0] > state[parseInt(d.id)][1]) {
+                          return "#ee9999";
+                        }
+                        else {
+                          return "#6293EC";
+                        }
+             });
+          });
 });
+
 
 d3.select(self.frameElement).style("height", height + "px");
 
