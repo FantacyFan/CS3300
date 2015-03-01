@@ -115,7 +115,7 @@
 		statesCoord = topojson.feature(shapes, shapes.objects.states).features; //long/lat coordinates				
 		
 		// draw bubbles
-		d3.csv("flightsfare_small.csv", function(error, rows) {
+		/*d3.csv("flightsfare_small.csv", function(error, rows) {
 			var svg = d3.select("#fareCities").append("svg")
 			.attr("width", width)
 			.attr("height", height);
@@ -142,9 +142,10 @@
 				}else {
 					return Math.pow(d.avg_fare-200,2)/5000+5;
 				}*/
-			})
+			/*})
 			.attr("opacity", 0.5);
-		});
+		});*/
+
 		//process data
 		d3.csv("flights_processed.csv", function(error, rows) {						
 			//key-value pairs with FIPS as key
@@ -346,9 +347,6 @@
 			})
 			.style("stroke", "#ccc");
 
-<<<<<<< HEAD
-
-=======
 			// add state name
 			statePaths.selectAll("text").data(statesCoord).enter()
 			.append("text")
@@ -370,7 +368,7 @@
 				else return '';
 			})
 			.style("font-size", "10px");
->>>>>>> origin/master
+
 
 			var svg = d3.select("#fare").append("svg")
 			.attr("width",70)
@@ -412,6 +410,30 @@
 			.attr("r", function(d) {return rScale(d.fare);})
 			.attr("opacity", 0.3);
 			
+		});
+
+		//draw bubbles
+		d3.csv("flightsfare_small.csv", function(error, rows) {
+
+			var bubbles = d3.select("#pass").select("svg").selectAll(".dot").data(rows).enter().append("circle");
+
+			bubbles.attr("transform", function(d) {
+    			return "translate(" + projection([d.long, d.lat]) + ")"
+    		})
+			.attr("r",function(d) {
+				/*if(d.avg_fare-300 < 0) {
+					return 5;
+				}else {
+					return d.avg_fare/10 -25;
+				}*/
+				if(d.avg_fare-200 < 0) {
+					return 5;
+				}else {
+					return Math.pow(d.avg_fare-200,2)/5000+5;
+				}
+			})
+			.style("fill","#b45a62")
+			.attr("opacity", 0.5);
 		});
 	});
 </script>
