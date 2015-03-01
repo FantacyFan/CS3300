@@ -30,6 +30,11 @@
 <!-- SVG element -->
 <div class="container">
 	<div class="description">
+		<h3> Flight Fares By Cities </h3>
+	</div>
+	<div class="map" id="fareCities">
+	</div>
+	<div class="description">
 		<h3> Incoming Flights </h3>
 	</div>
 	<div class="map" id="pass">
@@ -102,6 +107,30 @@
 	d3.json("us.json", function(error, shapes) {	
 		statesCoord = topojson.feature(shapes, shapes.objects.states).features; //long/lat coordinates				
 		
+		// draw bubble chart
+		d3.csv("flightsfare_small.csv", function(error, rows) {
+			var svg = d3.select("#fareCities").append("svg")
+			.attr("width", width)
+			.attr("height", height);
+			
+			var statePaths = svg.append("g");
+			
+			statePaths.selectAll("path").data(statesCoord).enter()
+			.append("path").attr("d", path)
+			.style({"fill":"#ccc", "stroke":"#ccc"});
+
+			var bubbles = svg.selectAll(".dot").data(rows).enter().append("circle");
+
+			bubbles.attr("transform", function(d) {
+    			return "translate(" + projection([d.long, d.lat]) + ")"
+    		})
+			.attr("r",function(d) {
+				var r = (d.avg_fare-100)/15+2;
+				return r;
+			})
+			.attr("opacity", 0.5);
+		});
+
 		//process data
 		d3.csv("flights_processed.csv", function(error, rows) {						
 			//key-value pairs with FIPS as key
@@ -218,6 +247,8 @@
 				}
 			})
 			.style("stroke", "#ccc");
+
+
 
 			var svg = d3.select("#fare").append("svg")
 			.attr("width",70)
