@@ -414,8 +414,15 @@
 
 		//draw bubbles
 		d3.csv("flightsfare_small.csv", function(error, rows) {
+			var dots = d3.select("#pass_out").select("svg").selectAll(".dot").data(rows).enter().append("circle");
 
-			var bubbles = d3.select("#pass").select("svg").selectAll(".dot").data(rows).enter().append("circle");
+			dots.attr("transform", function(d) {
+    			return "translate(" + projection([d.long, d.lat]) + ")"
+    		})
+			.attr("r",5)
+			.style("fill","#658ad8");
+
+			var bubbles = d3.select("#fare").select("svg").selectAll(".dot").data(rows).enter().append("circle");
 
 			bubbles.attr("transform", function(d) {
     			return "translate(" + projection([d.long, d.lat]) + ")"
