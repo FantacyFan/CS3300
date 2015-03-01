@@ -17,7 +17,7 @@
 	}
 	.bar_pass{
 		float: right;
-		margin-top: 150px;
+		margin-top: 70px;
 		display: inline-block;
 	}
 	</style>
@@ -80,6 +80,13 @@
 
         <linearGradient id="Gradient-3"
              x1="0" y1="100%" x2="0" y2="0">
+            <stop offset="0%" stop-color="#d8b365" />
+            <stop offset="50%" stop-color="#f5f5f5" />
+            <stop offset="100%" stop-color="#5ab4ac" />
+        </linearGradient>
+
+        <linearGradient id="Gradient-4"
+             x1="0" y1="100%" x2="0" y2="0">
             <stop offset="0%" stop-color="#f5f5f5" />
             <stop offset="100%" stop-color="#5ab4ac" />
         </linearGradient>
@@ -133,14 +140,38 @@
 			})
 			.style("stroke", "#ccc");
 
+
+			// add state name
+			statePaths.selectAll("text").data(statesCoord).enter()
+			.append("text")
+			.attr("x", function(d){
+				if(!isNaN(path.centroid(d)[0]))
+					return path.centroid(d)[0];
+				else
+					return 9999999;
+			})
+			.attr("y", function(d){
+				if(!isNaN(path.centroid(d)[1]))
+					return path.centroid(d)[1];
+				else
+					return 9999999;
+			})
+			.html(function(state){
+				if(flights.get(state.id))
+				    return flights.get(state.id)['State'];
+				else return '';
+			})
+			.style("font-size", "10px");
+
+
 			//draw color bar
 			var svg = d3.select("#pass").append("svg")
 			.attr("width",70)
-			.attr("height",300)
+			.attr("height",400)
 			.attr("class", "bar_pass")
 			.append("rect")
 			.attr("width",30)
-			.attr("height",300)
+			.attr("height",400)
 			.style("fill","url(#Gradient-1)");
 
 
@@ -166,13 +197,39 @@
 			})
 			.style("stroke", "#ccc");
 
+
+
+			// add state name
+			statePaths.selectAll("text").data(statesCoord).enter()
+			.append("text")
+			.attr("x", function(d){
+				if(!isNaN(path.centroid(d)[0]))
+					return path.centroid(d)[0];
+				else
+					return 9999999;
+			})
+			.attr("y", function(d){
+				if(!isNaN(path.centroid(d)[1]))
+					return path.centroid(d)[1];
+				else
+					return 9999999;
+			})
+			.html(function(state){
+				if(flights.get(state.id))
+				    return flights.get(state.id)['State'];
+				else return '';
+			})
+			.style("font-size", "10px");
+
+
+
 			var svg = d3.select("#pass_out").append("svg")
 			.attr("width",70)
-			.attr("height",300)
+			.attr("height",400)
 			.attr("class", "bar_out")
 			.append("rect")
 			.attr("width",30)
-			.attr("height",300)
+			.attr("height",400)
 			.style("fill","url(#Gradient-2)");
 
 			
@@ -195,7 +252,41 @@
 				}
 			})
 			.style("stroke", "#ccc");
-			
+
+
+			// add state name
+			statePaths.selectAll("text").data(statesCoord).enter()
+			.append("text")
+			.attr("x", function(d){
+				if(!isNaN(path.centroid(d)[0]))
+					return path.centroid(d)[0];
+				else
+					return 9999999;
+			})
+			.attr("y", function(d){
+				if(!isNaN(path.centroid(d)[1]))
+					return path.centroid(d)[1];
+				else
+					return 9999999;
+			})
+			.html(function(state){
+				if(flights.get(state.id))
+				    return flights.get(state.id)['State'];
+				else return '';
+			})
+			.style("font-size", "10px");
+
+
+			//draw color bar
+			var svg = d3.select("#pass_diff").append("svg")
+			.attr("width",70)
+			.attr("height",400)
+			.attr("class", "bar_pass")
+			.append("rect")
+			.attr("width",30)
+			.attr("height",400)
+			.style("fill","url(#Gradient-3)");
+
 			
 
 
@@ -219,17 +310,36 @@
 			})
 			.style("stroke", "#ccc");
 
+			// add state name
+			statePaths.selectAll("text").data(statesCoord).enter()
+			.append("text")
+			.attr("x", function(d){
+				if(!isNaN(path.centroid(d)[0]))
+					return path.centroid(d)[0];
+				else
+					return 9999999;
+			})
+			.attr("y", function(d){
+				if(!isNaN(path.centroid(d)[1]))
+					return path.centroid(d)[1];
+				else
+					return 9999999;
+			})
+			.html(function(state){
+				if(flights.get(state.id))
+				    return flights.get(state.id)['State'];
+				else return '';
+			})
+			.style("font-size", "10px");
+
 			var svg = d3.select("#fare").append("svg")
 			.attr("width",70)
-			.attr("height",300)
+			.attr("height",400)
 			.attr("class", "bar_fare")
 			.append("rect")
 			.attr("width",30)
-			.attr("height",300)
-			.style("fill","url(#Gradient-3)");
-
-
-
+			.attr("height",400)
+			.style("fill","url(#Gradient-4)");
 
 
 			
