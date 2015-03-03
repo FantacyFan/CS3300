@@ -8,12 +8,15 @@
 	<style>
 		h1 {
 			margin-bottom: 5px;
+			color: black;
+			text-shadow: 2px 2px #888888;
 		}
 		h4 {
 			text-align: center;
 		}
 		body { 
-			font-family: "Open Sans"; 
+			font-family: "Open Sans";
+			background-color: #ffffff; 
 		} 
 		div { 
 			margin: 10px; 
@@ -36,61 +39,69 @@
 		.bar_pass{
 			display: inline-block;
 		}
+		.container{
+			border: solid #DBE3F2 1px;
+			padding: 3px;
+			padding-bottom: 15px;
+			box-shadow: 10px 10px 5px #888888;
+			z-index: 10;
+			background-color: white;
+		}
+	
 	</style>
 </head>
 
 <body>
-<div style="text-align: center; display: block;">
-	<h1>Domestic Flights in 2014 Quarter 1</h1>
-	Data from the <a href="http://www.transtats.bts.gov/DL_SelectFields.asp?Table_ID=247&DB_Short_Name=Origin%20and%20Destination%20Survey">Bureau of Transportation Statistics</a>.
-</div>
 
-<!-- SVG element -->
-<div class="container">
-	<div class="description">
-		<h3> Flight Traffic </h3>
-		We thought it would be interesting to find states with the most air traffic. Here's what we found for domestic flights in 2014.
+	<div style="text-align: center; display: block;">
+		<h1>Domestic Flights in 2014 Quarter 1</h1>
+		<p style="text-shadow: 1px 1px #888888; color: black; font-size: 20px;">Data from the <a href="http://www.transtats.bts.gov/DL_SelectFields.asp?Table_ID=247&DB_Short_Name=Origin%20and%20Destination%20Survey" style="color: black; font-size: 20px;">Bureau of Transportation Statistics</a>.</p>
 	</div>
-	<div class="map left" id="pass_in">
-		<h4>Incoming Flights</h4>
+
+	<!-- SVG element -->
+	<div class="container">
+		<div class="description">
+			<h3> Flight Traffic </h3>
+			We thought it would be interesting to find states with the most air traffic. Here's what we found for domestic flights in 2014.<br><br>
+			The blue points in the right map show the top 100 airports in U.S. with the highest outgoing passengers.
+		</div>
+		<div class="map left" id="pass_in">
+			<h4>Incoming Flights</h4>
+		</div>
+		<div class="map right" id="pass_out">
+			<h4>Outgoing Flights</h4>
+		</div>	
 	</div>
-	<div class="map right" id="pass_out">
-		<h4>Outgoing Flights</h4>
-	</div>	
-</div>
-<div class="container">
-	<div class="description">
-		As one would expect outgoing and incoming flights are very related; states have similar numbers of people flying in and out. While popular vacation states such as California and Florida show a lot of traffic, states such as Texas are also very high. This suggests that our data might also be affected by state population size. 
-		<br><br>
-		We also mapped differences in incoming and outgoing flights to see if there was an interesting story about which states are attracting or repelling people.
+	<div class="container">
+		<div class="description">
+			As one would expect outgoing and incoming flights are very related; states have similar numbers of people flying in and out. While popular vacation states such as California and Florida show a lot of traffic, states such as Texas are also very high. This suggests that our data might also be affected by state population size. 
+			<br><br>
+			We also mapped differences in incoming and outgoing flights to see if there was an interesting story about which states are attracting or repelling people.
+		</div>
+		<div class="map left" id="pass_diff">
+			<h4>Difference between Outgoing and Incoming Flights</h4>
+		</div>
+		<div class="map right" id="graph">
+			<h4>Incoming Flights vs. Outgoing Flights</h4>
+		</div>
+		
 	</div>
-	<div class="map left" id="graph">
-		<h4>Incoming Flights vs. Outgoing Flights</h4>
+	<div class="container">
+		<div class="description">
+			<h3> Flight Fares </h3>
+			Lastly, we wanted to examine average flight fares per state and major cities.<br><br>
+			Interestingly, we found that the market fare doesn't correlate at all with flight traffic. Hawaii has the highest fare suggesting we might see a correlation if we looked at fare vs. distance traveled. For the most part, however, it seems average fares are very similar for most states.
+		</div>
+		<div class="map left" id="fare">
+			<h4>Market Fare of States</h4>
+		</div>
+		<div class="map right" id="fareGraph">
+			<h4>Market Fare vs. Incoming Flights
+		</div>
+		<!--<div class="map right" id="fareCities">
+			<h4>Market Fare of Major Cities</h4>
+		</div>-->
 	</div>
-	<div class="map right" id="pass_diff">
-		<h4>Difference between Outgoing and Incoming Flights</h4>
-	</div>
-</div>
-<div class="container">
-	<div class="description">
-		<h3> Flight Fares </h3>
-		Lastly, we wanted to examine average flight fares per state and major cities.
-	</div>
-	<div class="map" id="fare" style="text-align:center; width:100%;">
-		<h4>Market Fare of States</h4>
-	</div>
-	<!--<div class="map right" id="fareCities">
-		<h4>Market Fare of Major Cities</h4>
-	</div>-->
-</div>
-<div class="container">
-	<div class="description">
-		Interestingly, we found that the market fare doesn't correlate at all with flight traffic. Hawaii has the highest fare suggesting we might see a correlation if we looked at fare vs. distance traveled. For the most part, however, it seems average fares are very similar for most states.
-	</div>
-	<div class="map" id="fareGraph" style="display: block; text-align:center; width:100%;">
-		<h4>Market Fare vs. Incoming Flights
-	</div>
-</div>
 
 <svg style="position: fixed">
     <defs>
@@ -123,11 +134,11 @@
 
 <script>
 	//svg variables
-	var width = 565,
+	var width = 525;
 		height = 375;
 				
 	//map variables
-	var projection = d3.geo.albersUsa().scale(750).translate([width/2.1, height/2.1]);
+	var projection = d3.geo.albersUsa().scale(680).translate([width/2.1, height/2.1]);
 	var path = d3.geo.path().projection(projection); //path of USA
 
 	var statesCoord;
@@ -136,29 +147,7 @@
 	d3.json("us.json", function(error, shapes) {	
 		statesCoord = topojson.feature(shapes, shapes.objects.states).features; //long/lat coordinates				
 		
-		// draw bubble chart
-		/*d3.csv("flightsfare_small.csv", function(error, rows) {
-			var svg = d3.select("#fareCities").append("svg")
-			.attr("width", width)
-			.attr("height", height);
-			
-			var statePaths = svg.append("g");
-			
-			statePaths.selectAll("path").data(statesCoord).enter()
-			.append("path").attr("d", path)
-			.style({"fill":"#ccc", "stroke":"#ccc"});
 
-			var bubbles = svg.selectAll(".dot").data(rows).enter().append("circle");
-
-			bubbles.attr("transform", function(d) {
-    			return "translate(" + projection([d.long, d.lat]) + ")"
-    		})
-			.attr("r",function(d) {
-				var r = (d.avg_fare-100)/15+2;
-				return r;
-			})
-			.attr("opacity", 0.5);
-		});*/
 
 		//process data
 		d3.csv("flights_processed.csv", function(error, rows) {						
@@ -216,14 +205,31 @@
 
 
 			//draw color bar
-			var svg = d3.select("#pass_in").append("svg")
-			.attr("width",20)
+			var svg = d3.select("#pass_in").append("svg");
+			svg.attr("width",80)
 			.attr("height",375)
-			.attr("class", "bar_pass")
-			.append("rect")
+			.attr("class", "bar_pass");
+
+			svg.append("text")
+			.attr('x', 0)
+			.attr('y', 11)
+			.attr('font-size', 11)
+			.style("fill", "black")
+			.html("1,408,918");
+
+			svg.append("rect")
 			.attr("width",20)
-			.attr("height",375)
+			.attr("height",300)
+			.attr("x", 10)
+			.attr("y", 20)
 			.style("fill","url(#Gradient-1)");
+
+			svg.append("text")
+			.attr('x', 5)
+			.attr('y', 335)
+			.attr('font-size', 11)
+			.style("fill", "black")
+			.text("2,401");
 
 
 			//pass-out data
@@ -273,15 +279,32 @@
 			.style("font-size", "10px");
 
 
-
+			//draw color bar
 			var svg = d3.select("#pass_out").append("svg")
-			.attr("width",20)
+			.attr("width",80)
 			.attr("height",375)
-			.attr("class", "bar_out")
-			.append("rect")
+			.attr("class", "bar_out");
+
+			svg.append("text")
+			.attr('x', 0)
+			.attr('y', 11)
+			.attr('font-size', 11)
+			.style("fill", "black")
+			.html("1,402,517");
+
+			svg.append("rect")
 			.attr("width",20)
-			.attr("height",375)
+			.attr("height",300)
+			.attr("x", 10)
+			.attr("y", 20)
 			.style("fill","url(#Gradient-2)");
+
+			svg.append("text")
+			.attr('x', 5)
+			.attr('y', 335)
+			.attr('font-size', 11)
+			.style("fill", "black")
+			.text("2,404");
 
 			
 			//pass-diff data
@@ -330,24 +353,61 @@
 
 			//draw color bar
 			var svg = d3.select("#pass_diff").append("svg")
-			.attr("width",20)
+			.attr("width",80)
 			.attr("height",375)
-			.attr("class", "bar_pass")
-			.append("rect")
+			.attr("class", "bar_pass");
+
+			svg.append("text")
+			.attr('x', 0)
+			.attr('y', 11)
+			.attr('font-size', 11)
+			.style("fill", "black")
+			.text("1,408,918");
+
+			svg.append("text")
+			.attr('x', 35)
+			.attr('y', 160)
+			.attr('font-size', 11)
+			.style("fill", "black")
+			.text("2,401");
+
+			svg.append("text")
+			.attr('x', 25)
+			.attr('y', 175)
+			.attr('font-size', 11)
+			.style("fill", "black")
+			.text("------------");
+
+			svg.append("text")
+			.attr('x', 35)
+			.attr('y', 190)
+			.attr('font-size', 11)
+			.style("fill", "black")
+			.text("2,404");
+
+			svg.append("rect")
 			.attr("width",20)
-			.attr("height",375)
+			.attr("height",300)
+			.attr("x", 10)
+			.attr("y", 20)
 			.style("fill","url(#Gradient-3)");
 
+			svg.append("text")
+			.attr('x', 5)
+			.attr('y', 335)
+			.attr('font-size', 11)
+			.style("fill", "black")
+			.text("1,402,5174");
+
 			
-
-
 			//fare data
 			var passengerFareScale = d3.scale.linear().domain([222, d3.max(rows, function(d) {return Number(d.fare);})]).range(["#f5f5f5", "#5ab4ac"]); //min is outlier so use second smallest
 			
 			//draw states	
 			var svg = d3.select("#fare").append("svg")
 			.attr("width", width)
-			.attr("height", height);
+			.attr("height", height)
+			.style("padding-left", "10px");
 			
 			statePaths = svg.append("g");
 			
@@ -383,25 +443,45 @@
 			})
 			.style("font-size", "10px");
 
+			//draw color bar
 			var svg = d3.select("#fare").append("svg")
-			.attr("width",20)
+			.attr("width",70)
 			.attr("height",375)
-			.attr("class", "bar_fare")
-			.append("rect")
+			.attr("class", "bar_fare");
+
+			svg.append("text")
+			.attr('x', 0)
+			.attr('y', 11)
+			.attr('font-size', 11)
+			.style("fill", "black")
+			.text("1,408,918");
+
+			svg.append("rect")
 			.attr("width",20)
-			.attr("height",375)
+			.attr("height",300)
+			.attr("x", 10)
+			.attr("y", 20)
 			.style("fill","url(#Gradient-4)");
+
+			svg.append("text")
+			.attr('x', 5)
+			.attr('y', 335)
+			.attr('font-size', 11)
+			.style("fill", "black")
+			.text("2,401");
+
+			
 			
 			//in v out comparison
-			var padding = 40;
-			var gWidth = 600;
+			var padding = 20;
+			var gWidth = 550;
 			var gHeight = 375;
 			
 			var xScale = d3.scale.linear().domain(d3.extent(rows, function(d) {return Number(d.passIn);})).range([padding, gWidth-padding]);
 			var yScale = d3.scale.linear().domain(d3.extent(rows, function(d) {return Number(d.passOut);})).range([gHeight-padding, padding]);
 			var rScale = d3.scale.sqrt().domain(d3.extent(rows, function(d) {return Number(d.fare);})).range([5, 25]);
 			
-			var svg = d3.select("#graph").append("svg").attr("height", gHeight).attr("width", gWidth);
+			var svg = d3.select("#graph").append("svg").attr("height", gHeight).attr("width", gWidth).style("padding-left", "40px").style("padding-bottom", "20px").style("padding-right", "20px").style("font-size", "12px");
 			
 			//draw scale
 			var xAxis = d3.svg.axis().scale(xScale)
@@ -412,9 +492,24 @@
 			svg.append("g").attr("class", "axis")
 			.attr("transform", "translate(0," + (gHeight - padding) + ")")
 			.call(xAxis);
+
+			svg.append("text")
+			.attr('x', 440)
+			.attr('y', 390)
+			.attr('font-size', 11)
+			.style("fill", "black")
+			.html("incoming passenger");
+
 			svg.append("g").attr("class", "axis")
 			.attr("transform", "translate(" + padding + ",0)")
 			.call(yAxis);
+
+			svg.append("text")
+			.attr('x', -30)
+			.attr('y', 11)
+			.attr('font-size', 11)
+			.style("fill", "black")
+			.html("outgoing passenger");
 			
 			//draw circles
 			var circles = svg.selectAll().data(rows).enter().append("circle");
@@ -428,7 +523,7 @@
 			var xScale = d3.scale.linear().domain(d3.extent(rows, function(d) {return Number(d.passIn);})).range([padding, gWidth-padding]);
 			var yScale = d3.scale.linear().domain([d3.min(rows, function(d) {return Number(d.fare);}) - 20, d3.max(rows, function(d) {return Number(d.fare);}) + 20]).range([gHeight-padding, padding]);
 			
-			var svg = d3.select("#fareGraph").append("svg").attr("height", gHeight).attr("width", gWidth);
+			var svg = d3.select("#fareGraph").append("svg").attr("height", gHeight).attr("width", gWidth).style("padding-left", "30px").style("padding-bottom", "20px").style("padding-right", "20px").style("font-size", "12px");
 			
 			//draw scale
 			var xAxis = d3.svg.axis().scale(xScale)
@@ -439,9 +534,24 @@
 			svg.append("g").attr("class", "axis")
 			.attr("transform", "translate(0," + (gHeight - padding) + ")")
 			.call(xAxis);
+
+			svg.append("text")
+			.attr('x', 440)
+			.attr('y', 390)
+			.attr('font-size', 11)
+			.style("fill", "black")
+			.html("passenger");
+
 			svg.append("g").attr("class", "axis")
 			.attr("transform", "translate(" + padding + ",0)")
 			.call(yAxis);
+
+			svg.append("text")
+			.attr('x', 0)
+			.attr('y', 11)
+			.attr('font-size', 11)
+			.style("fill", "black")
+			.html("fare");
 			
 			//draw circles
 			var circles = svg.selectAll().data(rows).enter().append("circle");
@@ -455,7 +565,6 @@
 		//draw bubbles
 		d3.csv("flightsfare_small.csv", function(error, rows) {
 			var dots = d3.select("#pass_out").select("svg").selectAll(".dot").data(rows).enter().append("circle");
-
 			dots.attr("transform", function(d) {
     			return "translate(" + projection([d.long, d.lat]) + ")"
     		})
@@ -468,11 +577,6 @@
     			return "translate(" + projection([d.long, d.lat]) + ")"
     		})
 			.attr("r",function(d) {
-				/*if(d.avg_fare-300 < 0) {
-					return 5;
-				}else {
-					return d.avg_fare/10 -25;
-				}*/
 				if(d.avg_fare-200 < 0) {
 					return 5;
 				}else {
