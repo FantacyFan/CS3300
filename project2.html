@@ -1,0 +1,351 @@
+<html>
+<head>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+	<!-- Load the d3 library. -->
+	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	<script src="http://d3js.org/topojson.v1.min.js"></script>
+	
+	<style>
+		body { 
+			font-family: "Open Sans";
+			background-color: #ffffff; 
+		} 	
+		text {
+			text-anchor: middle;
+		}
+		.axis path { 
+			fill: none; stroke: #777; 
+		}
+		.axis line { 
+			stroke: #777; 
+		}
+		svg {
+			font-size: 11px;
+		}
+	</style>
+	
+	<script>
+	var temp;
+	var height = 650;
+	var width = 650;
+	var padding = 80;
+			
+	//HELPER FUNCTIONS
+	/** 
+	 * NE, W, ME, S should be booleans indicating whether to filter by that region
+	 * returns an array of the filtered data
+	 */
+	var filterRegion = function(data, NE, W, ME, S) {
+		var regionFilter = new Array();
+		data.forEach(function(r) {
+			if(NE && r.Region == "Northeast")
+				regionFilter.push(r);
+			else if(W && r.Region == "West")
+				regionFilter.push(r);
+			else if(ME && r.Region =="Midwest")
+				regionFilter.push(r);
+			else if(S && r.Region == "South")
+				regionFilter.push(r);
+		});
+		
+		return regionFilter;
+	};
+	
+	/** 
+	 * cause should be a string of the cause to filter by
+	 * returns an array of the filtered data
+	 */ 
+	var filterCause = function(data, cause) {
+		var causeFilter = new Array();
+		
+		data.forEach(function(r) {
+			if(r.Cause != null && r.Cause.trim() == cause)
+				causeFilter.push(r);
+		});
+		
+		return causeFilter;
+	};
+
+	/** 
+	 * combines all the year data
+	 * returns an array of objects with objects containing Year and Count
+	 */
+	var combineYear = function(data) {
+		var combinedYear = new Array();
+		
+		data.forEach(function(r) {
+			var year = Number(r.Year);
+			var count = Number(r.Count);
+			
+			//find index
+			var index = -1;
+		
+			combinedYear.forEach(function(r, i) {
+				if(r.Year == year) {
+					index = i;
+				}
+			});
+			
+			//add to combine array
+			if(index == -1)
+				combinedYear.push({"Year": year, "Count": count});	
+			else 
+				combinedYear[index].Count += count;	
+		});
+		
+		combinedYear.sort(function(a, b) {return a.Year - b.Year;});
+		return combinedYear;
+	};
+	
+	/** 
+	 * year should be a string of the year to filter by
+	 * returns an array of the filtered data
+	 */
+	var filterYear = function(data, year) {
+		var yearFilter = new Array();
+		
+		data.forEach(function(r) {
+			if(r.Year != null && r.Year.trim() == year)
+				yearFilter.push(r);
+		});
+		
+		return yearFilter;
+	};
+	
+	/** 
+	 * combines all the ethnicity data
+	 * returns an array of objects with objects containing Ethnicity and [Female Count, Male Count]
+	 */
+	var combineEthnicities = function(data) {
+		var combinedEthnicity = new Array();
+		
+		data.forEach(function(r) {
+			var ethnicity = r.Ethnicity;
+			var sex = r.Sex;
+			var count = Number(r.Count);
+			
+			//find index
+			var index = -1;
+		
+			combinedEthnicity.forEach(function(r, i) {
+				if(r.Ethnicity == ethnicity) {
+					index = i;
+				}
+			});
+			
+			//add to combine array
+			if(index == -1) {
+				if(sex == "Females")
+					combinedEthnicity.push({"Ethnicity": ethnicity, "Count": [count, 0]});
+				else if(sex == "Males")
+					combinedEthnicity.push({"Ethnicity": ethnicity, "Count": [0, count]});
+			}
+			else {
+				if(sex == "Females")
+					combinedEthnicity[index].Count[0] += count;	
+				else if(sex == "Males")
+					combinedEthnicity[index].Count[1] += count;	
+				
+			}
+		});
+		
+		combinedEthnicity.sort(function(a, b) {
+			if(a.Ethnicity > b.Ethnicity)
+				return 1;
+			else if(a.Ethnicity < b.Ethnicity)
+				return -1;
+			
+			return 0;
+		});
+		return combinedEthnicity;
+	};	
+	
+	/**
+	 * draws the line chart for count vs. year
+	 */
+	var drawLineChart = function(data, cause) {
+		var causeFilter = filterCause(data, cause);
+		var causeFilterCombined = combineYear(causeFilter);
+		
+		//clear svg
+		if(causeSvg == null) {
+			causeSvg = d3.select("#charts").append("svg")
+			.attr("height", height)
+			.attr("width", width);
+		}		
+		else
+			causeSvg.selectAll("*").remove();
+		
+		//scales
+		var xScale = d3.scale.ordinal()
+		.domain([2007, 2008, 2009, 2010, 2011])
+		.rangeRoundPoints([padding, width - padding], .3);
+		
+		var yScale = d3.scale.linear()
+		.domain([d3.min(causeFilterCombined, function(r) {return r.Count;}) - 20, d3.max(causeFilterCombined, function(r) {return r.Count;}) + 20])
+		.range([height - padding, padding]);
+		
+		//draw axis
+		var xAxis = d3.svg.axis().scale(xScale)
+		.orient("bottom");								
+		causeSvg.append("g").attr("class", "axis")
+		.attr("transform", "translate(0," + (height - padding) + ")")
+		.call(xAxis);
+				
+		var yAxis = d3.svg.axis().scale(yScale)
+		.orient("left");
+		causeSvg.append("g").attr("class", "axis")
+		.attr("transform", "translate(" + padding + ",0)")
+		.call(yAxis);
+		
+		//draw title/labels
+		causeSvg.append("text")
+		.attr('x', width/2)
+		.attr('y', padding)
+		.text(cause)
+		.style("font-weight", 600);
+		
+		causeSvg.append("text")
+		.attr('x', padding/2)
+		.attr('y', height/2)
+		.text("# of Deaths")
+		.style("font-weight", 600);
+		
+		causeSvg.append("text")
+		.attr('x', width/2)
+		.attr('y', height - padding/2)
+		.text("Year")
+		.style("font-weight", 600);
+				
+		//draw line
+		var line = d3.svg.line()
+		.x(function(r) { return xScale(r.Year); })
+		.y(function(r) { return yScale(r.Count); });
+				
+		causeSvg.append("path")
+		.attr("d", line(causeFilterCombined))
+		.style("fill", "none")
+		.style("stroke", "black");
+		
+		//draw circles
+		var circles = causeSvg.selectAll().data(causeFilterCombined).enter().append("circle");
+			
+		circles.attr("cx", function(r) { return xScale(r.Year); })
+		.attr("cy", function(r) { return yScale(r.Count); })
+		.attr("r", function(r) {return 15;})
+		.style("fill","black")
+		.on("click", function(r) { 
+			d3.selectAll("circle").style("fill", "black");
+			d3.select(this).style("fill", "blue");
+			//draw bar chart
+			drawBarChart(causeFilter, r.Year);
+		})
+		.on("mouseover", function() {
+			d3.select(this).style("opacity", .5);
+		})
+		.on("mouseout", function() {
+			d3.select(this).style("opacity", 1);
+		});
+	};
+	
+	/**
+	 * draws the bar chart for count vs. ethnicity/gender
+	 */
+	var drawBarChart = function(data, year) {
+		var yearFilter = filterYear(data, year);
+		var yearFilterCombined = combineEthnicities(yearFilter);
+		
+		//clear svg
+		if(yearSvg == null) {
+			yearSvg = d3.select("#charts").append("svg")
+			.attr("height", height)
+			.attr("width", width);
+		}
+		else
+			yearSvg.selectAll("*").remove();
+		
+		//scales
+		var ethArray = new Array();
+		yearFilterCombined.forEach(function(r) {
+			ethArray.push(r.Ethnicity);
+		});
+		
+		var xScale = d3.scale.ordinal()
+		.domain(ethArray)		
+		.rangeRoundPoints([padding, width - padding], .8);
+		
+		var yScale = d3.scale.linear()
+		.domain([0, d3.max(yearFilterCombined, function(r) {return Math.max(r.Count[0], r.Count[1]);})])
+		.range([height - padding, padding]);
+		
+		//draw bars
+		var barWidth = 50;
+		
+		yearSvg.selectAll(".bar")
+		.data(yearFilterCombined)
+		.enter().append("rect")
+		.attr("x", function(r) { return xScale(r.Ethnicity) - barWidth; })
+		.attr("width", barWidth)
+		.attr("y", function(r) { return yScale(r.Count[0]); })
+		.attr("height", function(r) { return height - padding - yScale(r.Count[0]); })
+		.attr("fill", "black");
+		
+		yearSvg.selectAll(".bar")
+		.data(yearFilterCombined)
+		.enter().append("rect")
+		.attr("x", function(r) { return xScale(r.Ethnicity); })
+		.attr("width", barWidth)
+		.attr("y", function(r) { return yScale(r.Count[1]); })
+		.attr("height", function(r) { return height - padding - yScale(r.Count[1]); })
+		.attr("fill", "gray");
+		
+		//draw axis
+		var xAxis = d3.svg.axis().scale(xScale)
+		.orient("bottom");								
+		yearSvg.append("g").attr("class", "axis")
+		.attr("transform", "translate(0," + (height - padding) + ")")
+		.call(xAxis);
+				
+		var yAxis = d3.svg.axis().scale(yScale)
+		.orient("left");
+		yearSvg.append("g").attr("class", "axis")
+		.attr("transform", "translate(" + padding + ",0)")
+		.call(yAxis);
+		
+		//draw title/labels
+		yearSvg.append("text")
+		.attr('x', width/2)
+		.attr('y', padding)
+		.text(year)
+		.style("font-weight", 600);
+		
+		yearSvg.append("text")
+		.attr('x', padding/2)
+		.attr('y', height/2)
+		.text("# of Deaths")
+		.style("font-weight", 600);
+		
+		yearSvg.append("text")
+		.attr('x', width/2)
+		.attr('y', height - padding/2)
+		.text("Ethnicity")
+		.style("font-weight", 600); 
+	};
+	
+	//PROCESS DATA
+	var yearSvg;
+	var causeSvg;
+	var cause = "PSYCH. SUBSTANCE USE & ACCIDENTAL DRUG POISONING";
+	var year = 2007;
+	
+	d3.csv("NYCDeaths.csv", function(error, rows) {	
+		temp = rows;
+		drawLineChart(rows, cause);
+	});
+	</script>
+</head>
+
+<body>
+	<div id="charts"></div>
+</body>
+</html>
