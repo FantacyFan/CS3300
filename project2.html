@@ -160,13 +160,151 @@
 		return combinedEthnicity;
 	};	
 	
+	/** 
+	 * combines all the cause data
+	 * returns a array of with Cause and array Values of objects {Year, Count}
+	 */
+	var combineCauses = function(data) {
+		var combinedCauses = new Array();
+		
+		data.forEach(function(r) {
+			var cause = r.Cause;
+			var year = Number(r.Year);
+			var count = Number(r.Count);
+			
+			//find index
+			var index = -1;
+		
+			combinedCauses.forEach(function(r, i) {
+				if(r.Cause == cause) {
+					index = i;
+				}
+			});
+		
+			//add to combined array
+			if(index == -1) {
+				combinedCauses.push({"Cause": cause, "Values":
+					[{"Year": 2007, "Count": 0},
+					 {"Year": 2008, "Count": 0},
+					 {"Year": 2009, "Count": 0},
+					 {"Year": 2010, "Count": 0},
+					 {"Year": 2011, "Count": 0}]
+				});
+				
+				i = -2007 + year;
+				combinedCauses[combinedCauses.length - 1].Values[i].Count += count;
+			}
+			else {
+				i = -2007 + year;
+				combinedCauses[index].Values[i].Count += count;
+			}
+		});
+		
+		return combinedCauses;
+	};	
+	
+	/**
+	 * draws the cause area chart for count vs. year
+	 */
+	var drawAreaChart = function(data) {	
+		var areaFilter = combineCauses(data);
+
+		//clear svg
+		if(areaSvg == null) {
+			areaSvg = d3.select("#areachart").append("svg")
+			.attr("height", height)
+			.attr("width", width);
+		}		
+		else
+			areaSvg.selectAll("*").remove();
+		
+		//scales
+		var xScale = d3.scale.ordinal()
+		.domain([2007, 2008, 2009, 2010, 2011])
+		.rangeRoundPoints([padding, width - padding]);
+		
+		var max = 0; //addition of all maximum counts
+		areaFilter.forEach(function(r) { 
+			max += Math.max(r.Values[0].Count, r.Values[1].Count, r.Values[2].Count, r.Values[3].Count, r.Values[4].Count);
+		}); 
+		
+		var yScale = d3.scale.linear()
+		.domain([0, max])
+		.range([height - padding, padding]);
+		
+		//draw axis
+		var xAxis = d3.svg.axis().scale(xScale)
+		.orient("bottom");								
+		areaSvg.append("g").attr("class", "axis")
+		.attr("transform", "translate(0," + (height - padding) + ")")
+		.call(xAxis);
+				
+		var yAxis = d3.svg.axis().scale(yScale)
+		.orient("left");
+		areaSvg.append("g").attr("class", "axis")
+		.attr("transform", "translate(" + padding + ",0)")
+		.call(yAxis);
+		
+		//draw title/labels
+		areaSvg.append("text")
+		.attr('x', width/2)
+		.attr('y', padding)
+		.text("NYC")
+		.style("font-weight", 600);
+		
+		areaSvg.append("text")
+		.attr('x', padding/2)
+		.attr('y', height/2)
+		.text("# of Deaths")
+		.style("font-weight", 600);
+		
+		areaSvg.append("text")
+		.attr('x', width/2)
+		.attr('y', height - padding/2)
+		.text("Year")
+		.style("font-weight", 600);
+				
+		//draw area	
+		var areaFunc = d3.svg.area()
+		.x(function(r) {return xScale(r.Year); })
+		.y0(height - padding)
+		.y1(function(r) { return yScale(r.Count); });
+			
+		var stack = d3.layout.stack()
+		.values(function(r) { return r.Values; });
+		
+		var areas = areaSvg.selectAll()
+		.data(stack(areaFilter))
+		.enter().append("path");
+		
+		areas.attr("d", function(r) { return areaFunc(r.Values); })
+		.style("opacity", .5)
+		.on("click", function(r) { 
+			//draw line chart
+			drawLineChart(data, r.Cause.trim());
+		})
+		.on("mouseover", function() {
+			d3.select(this).style("fill", "blue");
+		})
+		.on("mouseout", function() {
+			d3.select(this).style("fill", "black");
+		});		
+		
+		//label causes
+		areas.append("text")
+		.attr('x', 10)
+		.attr('y', 10)
+		.text(function(r) { console.log(r);return r.Cause.trim(); })
+			
+	};
+	
 	/**
 	 * draws the line chart for count vs. year
 	 */
 	var drawLineChart = function(data, cause) {
 		var causeFilter = filterCause(data, cause);
 		var causeFilterCombined = combineYear(causeFilter);
-		
+
 		//clear svg
 		if(causeSvg == null) {
 			causeSvg = d3.select("#charts").append("svg")
@@ -333,13 +471,13 @@
 	};
 	
 	//PROCESS DATA
-	var yearSvg;
+	var areaSvg;
 	var causeSvg;
-	var cause = "DISEASES OF HEART";
+	var yearSvg;
 	
 	d3.csv("NYCDeaths.csv", function(error, rows) {	
-		temp = rows;
-		drawLineChart(rows, cause);
+		drawAreaChart(rows);
+		//drawLineChart(rows, cause);
 	});
 	</script>
 </head>
