@@ -335,8 +335,7 @@
 	//PROCESS DATA
 	var yearSvg;
 	var causeSvg;
-	var cause = "PSYCH. SUBSTANCE USE & ACCIDENTAL DRUG POISONING";
-	var year = 2007;
+	var cause = "DISEASES OF HEART";
 	
 	d3.csv("NYCDeaths.csv", function(error, rows) {	
 		temp = rows;
@@ -346,6 +345,8 @@
 </head>
 
 <body>
+	<div id="map"></div>
+	<div id="areachart"></div>
 	<div id="charts"></div>
 </body>
 </html>
