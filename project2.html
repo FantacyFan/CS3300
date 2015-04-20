@@ -24,12 +24,7 @@
 		}
 	</style>
 	
-	<script>
-	var temp;
-	var height = 650;
-	var width = 650;
-	var padding = 80;
-			
+	<script>			
 	//HELPER FUNCTIONS
 	/** 
 	 * NE, W, ME, S should be booleans indicating whether to filter by that region
@@ -205,6 +200,7 @@
 	
 	/**
 	 * draws the cause area chart for count vs. year
+	 * doesn't work
 	 */
 	var drawAreaChart = function(data) {	
 		var areaFilter = combineCauses(data);
@@ -238,7 +234,7 @@
 		areaSvg.append("g").attr("class", "axis")
 		.attr("transform", "translate(0," + (height - padding) + ")")
 		.call(xAxis);
-				
+		
 		var yAxis = d3.svg.axis().scale(yScale)
 		.orient("left");
 		areaSvg.append("g").attr("class", "axis")
@@ -267,8 +263,8 @@
 		//draw area	
 		var areaFunc = d3.svg.area()
 		.x(function(r) {return xScale(r.Year); })
-		.y0(height - padding)
-		.y1(function(r) { return yScale(r.Count); });
+		.y0(function(r) { return yScale(r.y0); })
+		.y1(function(r) { return yScale(r.y0 + r.Count); });
 			
 		var stack = d3.layout.stack()
 		.values(function(r) { return r.Values; });
@@ -297,6 +293,196 @@
 		.text(function(r) { console.log(r);return r.Cause.trim(); })
 			
 	};
+	
+	/**
+	 * draws the cause area chart for count vs. year
+	 */
+	var drawAreaChart2 = function(data) {
+		var margin = {top: 20, right: 20, bottom: 30, left: 50},
+			width2 = 860 - margin.left - margin.right,
+			height2 = 400 - margin.top - margin.bottom;
+
+		var parseDate = d3.time.format("%Y").parse,
+			formatPercent = d3.format(".0%");
+
+		var x = d3.time.scale()
+			.domain([2007,2011])
+			.range([0, width2]);
+
+		var y = d3.scale.linear()
+			.range([height2, 0]);
+
+		var color = d3.scale.category20();
+
+		var xAxis = d3.svg.axis()
+			.scale(x)
+			.orient("bottom")
+			.tickFormat(function(d) { return d * 1; });
+
+		var yAxis = d3.svg.axis()
+			.scale(y)
+			.orient("left")
+			.tickFormat(formatPercent);
+
+		var area = d3.svg.area()
+			.x(function(d) { return x(parseInt(d.date)); })
+			.y0(function(d) { return y(d.y0); })
+			.y1(function(d) { return y(d.y0 + d.y); });
+
+		var stack = d3.layout.stack()
+			.values(function(d) { return d.values; });
+
+		if(areaSvg == null) {
+			areaSvg = d3.select("#areachart").append("svg")
+			.attr("width", width2 + margin.left + margin.right)
+			.attr("height", height2 + margin.top + margin.bottom)
+			.append("g")
+			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+		}		
+		else
+			areaSvg.selectAll("*").remove();
+			
+		areaSvg.append("text")
+		.attr('x', width/2)
+		.attr('y', 0)
+		.text("NYC")
+		.style("font-weight", 600);
+		
+		areaSvg.append("text")
+		.attr('x', 0)
+		.attr('y', height2/2)
+		.text("# of Deaths")
+		.style("font-weight", 600);
+		
+		areaSvg.append("text")
+		.attr('x', width2/2)
+		.attr('y', height2 + margin.bottom)
+		.text("Year")
+		.style("font-weight", 600);
+
+		var new_data = [];
+		var tmp = {};
+
+		new_data = data;
+	 
+		var yy = [];
+		var c = [];
+		var cnt = [];
+		var count = 0;
+		
+		for(var i=0; i<=new_data.length-1; i++){
+		  yy[i] = new_data[i]["Year"];
+		  c[i] = new_data[i]["Cause"];
+		  cnt[i] = new_data[i]["Count"];
+		  if(tmp.hasOwnProperty(yy[i])){
+			if(tmp[yy[i]].hasOwnProperty(c[i])){
+			  var tmpcnt = Number(tmp[yy[i]][c[i]]);
+			  tmpcnt += Number(cnt[i]);
+			  tmp[yy[i]][c[i]]=String(tmpcnt);
+			} else {
+			  tmp[yy[i]][c[i]] = cnt[i];
+			}
+		  } else {
+			tmp[yy[i]] = {};
+			tmp[yy[i]][c[i]] = cnt[i];
+		  }
+		}
+
+		var keypool = {};
+		var keypoolarr = [];
+		var idx = 0;
+
+		// add all causes in one pool, and will be used for checking
+		for(var i=2007; i<=2011; i++){
+		  for(var j=0; j<=d3.keys(tmp[i]).length; j++){
+			if(!(keypool.hasOwnProperty(d3.keys(tmp[i])[j]))&&d3.keys(tmp[i])[j]!==undefined) {
+			  keypool[d3.keys(tmp[i])[j]] = idx;
+			  keypoolarr[idx++] = d3.keys(tmp[i])[j];
+			}
+		  }
+		}
+		keypoolarr.sort();
+
+		var res = [];
+		for (var key in tmp) {
+		  if (tmp.hasOwnProperty(key)) {
+			var oneRecord = {};
+			oneRecord["Year"] = key;
+			for (var cause in keypool) {
+			  if (keypool.hasOwnProperty(cause)) {
+				if(tmp[key].hasOwnProperty(cause) && cause !="undefined"){
+				  oneRecord[cause] = tmp[key][cause];
+				} else if( cause !== undefined ){
+				  oneRecord[cause] = "0";
+				}
+			  }
+			}
+			res.push(oneRecord);
+		  }
+		}
+
+		color.domain(keypoolarr);
+
+		data.forEach(function(d) {
+		  return d.Year;
+		});
+
+		var causes = stack(color.domain().map(function(name) {
+		  return {
+			name: name,
+			values: res.map(function(d) {
+			  return {date: d.Year, y: d[name] / 100000};
+			})
+		  };
+		}));
+
+		x.domain(d3.extent(res, function(d) { return d.Year; }));
+
+		var cause = areaSvg.selectAll(".cause")
+		  .data(causes)
+		.enter().append("g")
+		  .attr("class", "cause");
+
+		cause.append("path")
+			.attr("d", function(d) { return area(d.values); })
+			.style("fill", function(d) { return color(d.name); })		  
+			.style("opacity", .5)
+			.on("click", function(r) { 
+				d3.select("path").selectAll("text").style("display", "none");
+				d3.select(this).select("text").style("display", "inline");
+				//draw line chart
+				drawLineChart(data, r.name.trim());
+			})
+			.on("mouseover", function() {
+				d3.select(this).style("opacity", 1);
+			})
+			.on("mouseout", function() {
+				d3.select(this).style("opacity", .5);
+			});;
+
+		cause.append("text")
+			.datum(function(d) { return {name: d.name, value: d.values[d.values.length - 1]}; })
+			.attr("transform", function(d) { 
+			  return "translate(" + x(d.value.date) + "," + y(d.value.y0 + d.value.y / 2) + ")"; 
+			})
+			.attr("x", -6)
+			.attr("dy", ".35em")
+			.text(function(d) { return d.name; })
+			.style("text-anchor", "end");
+
+		areaSvg.append("g")
+			.attr("class", "x axis")
+			.attr("transform", "translate(0," + height2 + ")")
+			.call(xAxis);
+
+		areaSvg.append("g")
+			.attr("class", "y axis")
+			.call(yAxis);
+	};
+		
+	var height = 400;
+	var width = 440;
+	var padding = 80;
 	
 	/**
 	 * draws the line chart for count vs. year
@@ -417,7 +603,7 @@
 		.range([height - padding, padding]);
 		
 		//draw bars
-		var barWidth = 50;
+		var barWidth = 30;
 		
 		yearSvg.selectAll(".bar")
 		.data(yearFilterCombined)
@@ -476,8 +662,7 @@
 	var yearSvg;
 	
 	d3.csv("NYCDeaths.csv", function(error, rows) {	
-		drawAreaChart(rows);
-		//drawLineChart(rows, cause);
+		drawAreaChart2(rows);
 	});
 	</script>
 </head>
