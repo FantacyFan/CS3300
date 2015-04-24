@@ -33,9 +33,12 @@
       font-weight: lighter;
       text-align: center;
     }
-    h5 {
+    h3 {
       text-align: center;
       margin-bottom: 0px;
+    }
+    #areachart h3 {
+      margin-bottom: 10px;
     }
     #detail {
       margin-bottom: 90px;
@@ -43,6 +46,7 @@
     #areachart {
       width: 100%;
       margin-bottom: 60px;
+      padding-top: 10px;
     }
     #charts {
       width: 100%;
@@ -797,10 +801,12 @@
 
 <body>
   <h1>Top Causes of Death in the U.S.</h1>
-  <h5>Select a region or New York City from the map</h5>
+  <h3>Select a region or New York City from the map</h3>
   <div id="usmap"></div>
   <div id="detail">
-    <div id="areachart"></div>
+    <div id="areachart">
+      <h3>Select a cause of death</h3>
+    </div>
     <div id="charts"></div>
   </div>
 </body>
