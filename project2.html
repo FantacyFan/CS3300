@@ -50,6 +50,12 @@
       width: 100%;
       text-align: center;
     }
+    .legend {
+    font-size: 12px;
+    }
+    rect{
+      stroke-width: 2;
+    }
   </style>
   
 <script>
@@ -316,114 +322,20 @@
     return combinedCauses;
   };  
   
-  /**
-   * draws the cause area chart for count vs. year
-   * doesn't work
-   */
-  /*var drawAreaChart = function(data) {  
-    var areaFilter = combineCauses(data);
-    //clear svg
-    if(areaSvg == null) {
-      areaSvg = d3.select("#areachart").append("svg")
-      .attr("height", height)
-      .attr("width", width);
-    }   
-    else
-      areaSvg.selectAll("*").remove();
-    
-    //scales
-    var xScale = d3.scale.ordinal()
-    .domain([2007, 2008, 2009, 2010, 2011])
-    .rangeRoundPoints([padding, width - padding]);
-    
-    var max = 0; //addition of all maximum counts
-    areaFilter.forEach(function(r) { 
-      max += Math.max(r.Values[0].Count, r.Values[1].Count, r.Values[2].Count, r.Values[3].Count, r.Values[4].Count);
-    }); 
-    
-    var yScale = d3.scale.linear()
-    .domain([0, max])
-    .range([height - padding, padding]);
-    
-    //draw axis
-    var xAxis = d3.svg.axis().scale(xScale)
-    .orient("bottom");                
-    areaSvg.append("g").attr("class", "axis")
-    .attr("transform", "translate(0," + (height - padding) + ")")
-    .call(xAxis);
-    
-    var yAxis = d3.svg.axis().scale(yScale)
-    .orient("left");
-    areaSvg.append("g").attr("class", "axis")
-    .attr("transform", "translate(" + padding + ",0)")
-    .call(yAxis);
-    
-    //draw title/labels
-    areaSvg.append("text")
-    .attr('x', width/2)
-    .attr('y', padding)
-    .text("NYC")
-    .style("font-weight", 600);
-    
-    areaSvg.append("text")
-    .attr('x', padding/2)
-    .attr('y', height/2)
-    .text("# of Deaths")
-    .style("font-weight", 600);
-    
-    areaSvg.append("text")
-    .attr('x', width/2)
-    .attr('y', height - padding/2)
-    .text("Year")
-    .style("font-weight", 600);
-        
-    //draw area 
-    var areaFunc = d3.svg.area()
-    .x(function(r) {return xScale(r.Year); })
-    .y0(function(r) { return yScale(r.y0); })
-    .y1(function(r) { return yScale(r.y0 + r.Count); });
-      
-    var stack = d3.layout.stack()
-    .values(function(r) { return r.Values; });
-    
-    var areas = areaSvg.selectAll()
-    .data(stack(areaFilter))
-    .enter().append("path");
-    
-    areas.attr("d", function(r) { return areaFunc(r.Values); })
-    .style("opacity", .5)
-    .on("click", function(r) { 
-      //draw line chart
-      drawLineChart(data, r.Cause.trim());
-    })
-    .on("mouseover", function() {
-      d3.select(this).style("fill", "blue");
-    })
-    .on("mouseout", function() {
-      d3.select(this).style("fill", "black");
-    });   
-    
-    //label causes
-    areas.append("text")
-    .attr('x', 10)
-    .attr('y', 10)
-    .text(function(r) { console.log(r);return r.Cause.trim(); })
-      
-  };*/
   
   /**
    * draws the cause area chart for count vs. year
    */
   var drawAreaChart2 = function(data) {
     var year_max = 0;
-    var margin = {top: 20, right: 20, bottom: 30, left: 50},
-      width2 = 650 - margin.left - margin.right,
+    var margin = {top: 20, right: 60, bottom: 30, left: 50},
+      width2 = 1050 - margin.left - margin.right,
       height2 = 550 - margin.top - margin.bottom;
     var parseDate = d3.time.format("%Y").parse,
       formatPercent = d3.format(".0%");
     var x = d3.time.scale()
       .domain([2007,2011])
-      .range([0, width2]);
+      .range([0, width2*0.6]);
     var y = d3.scale.linear()
       .range([height2, 0]);
     var color = d3.scale.category20();
@@ -446,10 +358,12 @@
       .attr("width", width2 + margin.left + margin.right)
       .attr("height", height2 + margin.top + margin.bottom)
       .append("g")
+      .attr("class", "area")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
     }   
     else
       areaSvg.selectAll("*").remove();
+
       
     areaSvg.append("text")
     .attr('x', width/2)
@@ -549,11 +463,15 @@
     }));
     x.domain(d3.extent(res, function(d) { return d.Year; }));
     var cause = areaSvg.selectAll(".cause")
-      .data(causes)
-    .enter().append("g")
-      .attr("class", "cause");
+                   .data(causes)
+                   .enter()
+                   .append("g")
+                   .attr("class", "cause")
+                   .style("fill",function(d,i){ return color(i); });
     cause.append("path")
-      .attr("d", function(d) { return area(d.values); })
+      .attr("d", function(d) { 
+        console.log(d.values)
+        return area(d.values); })
       .style("fill", function(d) { return color(d.name); })     
       .style("opacity", .5)
       .on("click", function(r) { 
@@ -572,15 +490,63 @@
       .on("mouseout", function() {
         d3.select(this).style("opacity", .5);
       });;
-    cause.append("text")
-      .datum(function(d) { return {name: d.name, value: d.values[d.values.length - 1]}; })
-      .attr("transform", function(d) { 
-        return "translate(" + x(d.value.date) + "," + y(d.value.y0 + d.value.y / 2) + ")"; 
-      })
-      .attr("x", -0.6)
-      .attr("dy", ".35em")
-      .text(function(d) { return d.name; })
-      .style("text-anchor", "end");
+
+      var labHeight = 15;
+    var labRadius = 5;
+    var labelCircle = cause.append("circle")
+            .attr("cx",function(d){ return width2 - margin.right*5.5; })
+            .attr("cy",function(d,i){ return margin.top * 2 + labHeight * i; })
+            .attr("r",labRadius);
+
+
+    var labelText = cause.append("text")
+              .attr("x",function(d){ return width2 - margin.right*2.5; })
+              .attr("y",function(d,i){ return margin.top * 2 + labHeight * i; })
+              .attr("dy",labRadius/2)
+              .text(function(d){ return d.name; });
+
+
+    // cause.append("text")
+    //   .datum(function(d) { 
+    //     return {name: d.name, value: d.values[d.values.length - 1]}; })
+    //   .attr("transform", function(d) { 
+    //     return "translate(" + x(d.value.date) + "," + y(d.value.y0 + d.value.y / 2) + ")"; 
+    //   })
+    //   .attr("x", 200)
+    //   .attr("dy", ".35em")
+    //   .text(function(d) { return d.name; })
+    //   .style("text-anchor", "end");
+
+    //draw legend 
+    // var legendRectSize = 18;
+    // var legendSpacing = 4;
+
+    // var legend = svg.selectAll('.legend')
+    // .data(color.domain())
+    // .enter()
+    // .append('g')
+    // .attr('class', 'legend')
+    // .attr('transform', function(d, i) {
+    //   var height = legendRectSize + legendSpacing;
+    //   var offset =  height * color.domain().length / 2;
+    //   var horz = -2 * legendRectSize;
+    //   var vert = i * height - offset;
+    //   return 'translate(' + horz + ',' + vert + ')';
+    // });
+
+    // legend.append('rect')
+    // .attr('width', legendRectSize)
+    // .attr('height', legendRectSize)
+    // .style('fill', color)
+    // .style('stroke', color);
+
+    // legend.append('text')
+    // .attr('x', legendRectSize + legendSpacing)
+    // .attr('y', legendRectSize - legendSpacing)
+    // .text(function(d) { return d; });
+
+
+
     areaSvg.append("g")
       .attr("class", "x axis")
       .attr("transform", "translate(0," + height2 + ")")
