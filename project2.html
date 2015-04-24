@@ -66,6 +66,13 @@
   text {
     text-anchor: middle;
   }
+  #tooltip {
+	position: absolute;
+	background-color: "white";
+	font-size: 16px;
+	text-align: end;
+	text-weight: 600;
+  }
   </style>
   
 <script>
@@ -438,6 +445,12 @@
     .attr('y', height2 + margin.bottom - 15)
   .attr("class", "alabel")
     .text("Year");
+	
+	areaSvg.append("text")
+    .attr('x', width2/2)
+    .attr('y', height2 + margin.bottom - 30)
+  .style("font-size", 10)
+    .text("(click for more information)");
   
   //process data to correct format for area/stack functions
     var new_data = [];
@@ -532,7 +545,7 @@
     };
   }));
   x.domain(d3.extent(res, function(d) { return d.Year; }));
-    
+	
   var cause = areaSvg.selectAll(".cause")
     .data(causes)
     .enter()
@@ -544,19 +557,17 @@
     .attr("d", function(d) { return area(d.values); })
     .style("opacity", .5)
     .on("click", function(r) { 
-        d3.select("path").selectAll("text").style("display", "none");
-    
-        d3.select(this).select("text").style("display", "inline");
-    
-        //draw line chart
+		//draw line chart
         drawLineChart(data, r.name.trim());
         //draw bar chart
         var causeFilter = filterCause(data, r.name.trim());
         drawBarChart(causeFilter,2007);
         smoothScroll("#charts");
     })
-    .on("mouseover", function() {
+    .on("mouseover", function(r) {
         d3.select(this).style("opacity", 1);
+		console.log(r.values);
+		d3.select("#tooltip").text(r.name).style("left", margin.left + 20).style("top", y(r.values[0].y0 + r.values[0].y) + mapHeight + margin.top + 130);
     })
     .on("mouseout", function() {
         d3.select(this).style("opacity", .5);
@@ -575,7 +586,8 @@
   })
   .attr("cy",function(d,i){ return (labHeight * 1.4 *i)%height2; })
   .attr("r",labRadius);
-    var labelText = cause.append("text")
+  
+   var labelText = cause.append("text")
   .attr("x",function(d, i){ 
     if((labHeight * 1.4 *i)>height2){
       return width2*.57 + 265;
@@ -786,8 +798,11 @@
   <h1>Top Causes of Death in the U.S.</h1>
   <h5>Select a region or New York City from the map</h5>
   <div id="usmap"></div>
+  
   <div id="detail">
-    <div id="areachart"></div>
+    <div id="areachart">
+		<div id="tooltip"> </div>
+	</div>
     <div id="charts"></div>
   </div>
 </body>
