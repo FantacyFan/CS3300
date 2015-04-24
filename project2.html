@@ -45,6 +45,7 @@
     #areachart {
       width: 100%;
       margin-bottom: 60px;
+      padding-top: 30px;
     }
     #charts {
       width: 100%;
@@ -114,6 +115,8 @@
       .style("fill", "#E6E6E6")
       .style("stroke", "#ccc")
       .on("mouseover", function() {
+        //d3.select("#usmap").select("svg").select("g").selectAll("path").style("fill","#e6e6e6");
+        d3.select("#nyc").style("fill","#69BFC7");
         var regionName = d3.select(this).attr("class");
         d3.selectAll("."+regionName)
           .style("fill", "#d2d2d2");
@@ -136,7 +139,7 @@
             else if (regionName=="South")
               regionFilter = filterRegion(row,false,false,false,true);
 			  
-			drawAreaChart2(regionFilter);
+			drawAreaChart2(regionFilter, regionName);
           });
           smoothScroll("#detail");
       });
@@ -149,16 +152,17 @@
         .attr("r",20)
         .attr("id","nyc")
         .style("fill","#69BFC7")
-        .style("opacity","0.8")
+        .style("opacity",.9)
         .on("mouseover", function(){
           d3.select(this).style("fill","#4FA9B0");
+          d3.select("#usmap").select("svg").select("g").selectAll("path").style("fill","#e6e6e6");
         })
         .on("mouseout", function(){
           d3.select(this).style("fill","#69BFC7");
         })
         .on("click", function() {
           d3.csv("NYCDeaths.csv", function(error, rows) { 
-            drawAreaChart2(rows);
+            drawAreaChart2(rows, "New York City");
           });
           smoothScroll("#detail");
         });
@@ -172,7 +176,7 @@
   var smoothScroll = function(div) {
     $("html,body").animate({
       scrollTop: $(div).offset().top
-    }, 1000);  
+    }, 800);  
   };
   
   /** 
@@ -351,21 +355,21 @@
   /**
    * draws the cause area chart for count vs. year
    */
-  var drawAreaChart2 = function(data) {
+  var drawAreaChart2 = function(data, region) {
     var year_max = 0;
     var margin = {top: 40, right: 10, bottom: 60, left: 80},
-      width2 = 1200 - margin.left - margin.right,
-      height2 = 620 - margin.top - margin.bottom;
+      width2 = 1300 - margin.left - margin.right,
+      height2 = 640 - margin.top - margin.bottom;
     var parseDate = d3.time.format("%Y").parse,
       formatPercent = d3.format(".0%");
 	  
 	//scales
     var x = d3.time.scale()
       .domain([2007,2011])
-      .range([0, width2 * .7]);
+      .range([0, width2 * .57]);
     var y = d3.scale.linear()
       .range([height2, 0]);
-    var color = d3.scale.category20();
+    var color = d3.scale.category20b();
 	
 	//axis
     var xAxis = d3.svg.axis()
@@ -401,7 +405,7 @@
     areaSvg.append("text")
     .attr('x', width2/3)
     .attr('y', 0)
-    .text("NYC")
+    .text(region)
 	.style("font-size", "30px");
     
     areaSvg.append("text")
@@ -413,7 +417,7 @@
         
     areaSvg.append("text")
     .attr('x', width2/3)
-    .attr('y', height2 + margin.bottom)
+    .attr('y', height2 + margin.bottom - 15)
 	.attr("class", "alabel")
     .text("Year");
 	
@@ -533,9 +537,17 @@
     })
     .on("mouseover", function() {
         d3.select(this).style("opacity", 1);
+        d3.select(this.parentNode).select("circle").style("fill",d3.select(this.parentNode).style("fill"));
+        d3.select(this.parentNode).select("text").style("fill",d3.select(this.parentNode).style("fill"));
+        //d3.select(this.parentNode).select("circle").style("opacity",1);
+        //d3.select(this.parentNode).select("text").style("opacity",1);
     })
     .on("mouseout", function() {
         d3.select(this).style("opacity", .5);
+        d3.select(this.parentNode).select("circle").style("fill","#d2d2d2");
+        d3.select(this.parentNode).select("text").style("fill","#d2d2d2");
+        //d3.select(this.parentNode).select("circle").style("opacity",.3);
+        //d3.select(this.parentNode).select("text").style("opacity",.3);
     });
 
 	//draw legend
@@ -543,30 +555,83 @@
     var labRadius = 5;
     var labelCircle = cause.append("circle")
     .attr("cx",function(d, i){ 
-		if((margin.top * 2 + labHeight * 1.4 *i)>height2){
-			return width2 - margin.right*5;
+		if((labHeight * 1.4 *i)>height2){
+			return width2*.57 + 255;
 		}
 		else{
-			return width2 - margin.right*8;
+			return width2*.57 + 15;
 		}
 	})
-	.attr("cy",function(d,i){ return (margin.top * 2 + labHeight * 1.4 *i)%height2; })
-	.attr("r",labRadius);
+	.attr("cy",function(d,i){ return (labHeight * 1.4 *i)%height2; })
+	.attr("r",labRadius)
+  .style("fill","#d2d2d2")
+  .on("mouseover", function() {
+        /*d3.select(this).style("opacity", 1);
+        d3.select(this.parentNode).select("path").style("opacity",1);
+        d3.select(this.parentNode).select("text").style("opacity",1);*/
+        d3.select(this.parentNode).select("path").style("opacity",1);
+        d3.select(this).style("fill",d3.select(this.parentNode).style("fill"));
+        d3.select(this.parentNode).select("text").style("fill",d3.select(this.parentNode).style("fill"));
+    })
+    .on("mouseout", function() {
+        d3.select(this).style("opacity", .3);
+        /*d3.select(this.parentNode).select("path").style("opacity",.5);
+        d3.select(this.parentNode).select("text").style("opacity",.3);*/
+        d3.select(this).style("fill","#d2d2d2");
+        d3.select(this.parentNode).select("text").style("fill","#d2d2d2");
+    })
+    .on("click", function(r) { 
+        d3.select("path").selectAll("text").style("display", "none");
+    
+        d3.select(this).select("text").style("display", "inline");
+    
+        //draw line chart
+        drawLineChart(data, r.name.trim());
+        //draw bar chart
+        var causeFilter = filterCause(data, r.name.trim());
+        drawBarChart(causeFilter,2007);
+        smoothScroll("#charts");
+    });
 
     var labelText = cause.append("text")
 	.attr("x",function(d, i){ 
-		var wrapheight = margin.top * 2 + labHeight * 1.4 *i;
-		if(wrapheight>height2){
-			return width2 - margin.right*3
+		if((labHeight * 1.4 *i)>height2){
+			return width2*.57 + 265;
 		}
 		else{
-			return width2 - margin.right*7.5;
+			return width2*.57 + 25;
 		}
 	})
-	.attr("y",function(d,i){ return (margin.top * 2 + labHeight * 1.4 *i)%height2; })
+	.attr("y",function(d,i){ return (labHeight * 1.4 *i)%height2; })
 	.attr("dy",labRadius/2)
 	.attr("class", "arealegend")
-	.text(function(d){ return d.name; });
+  .style("fill","#d2d2d2")
+	.text(function(d){ return d.name; })
+  .on("mouseover", function() {
+        d3.select(this.parentNode).select("path").style("opacity",1);
+        d3.select(this).style("fill",d3.select(this.parentNode).style("fill"));
+        d3.select(this.parentNode).select("circle").style("fill",d3.select(this.parentNode).style("fill"));
+  })
+  .on("mouseout", function() {
+        /*d3.select(this).style("opacity", .3);
+        d3.select(this.parentNode).select("circle").style("opacity",.3);
+        d3.select(this.parentNode).select("path").style("opacity",.5);*/
+        d3.select(this.parentNode).select("path").style("opacity",.5);
+        d3.select(this).style("fill","#d2d2d2");
+        d3.select(this.parentNode).select("circle").style("fill","#d2d2d2");
+  })
+  .on("click", function(r) { 
+        d3.select("path").selectAll("text").style("display", "none");
+    
+        d3.select(this).select("text").style("display", "inline");
+    
+        //draw line chart
+        drawLineChart(data, r.name.trim());
+        //draw bar chart
+        var causeFilter = filterCause(data, r.name.trim());
+        drawBarChart(causeFilter,2007);
+        smoothScroll("#charts");
+  });
 
     areaSvg.append("g")
 	.attr("class", "x axis")
