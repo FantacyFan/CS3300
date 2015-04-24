@@ -39,7 +39,6 @@
     }
     #detail {
       margin-bottom: 90px;
-      overflow: hidden;
     }
     #areachart {
       width: 100%;
@@ -135,7 +134,7 @@
             else if (regionName=="South")
               regionFilter = filterRegion(row,false,false,false,true);
 			  
-			drawAreaChart2(regionFilter);
+			drawAreaChart2(regionFilter, regionName);
           });
           smoothScroll("#detail");
       });
@@ -157,7 +156,7 @@
         })
         .on("click", function() {
           d3.csv("NYCDeaths.csv", function(error, rows) { 
-            drawAreaChart2(rows);
+            drawAreaChart2(rows, "New York City");
           });
           smoothScroll("#detail");
         });
@@ -350,18 +349,18 @@
   /**
    * draws the cause area chart for count vs. year
    */
-  var drawAreaChart2 = function(data) {
+  var drawAreaChart2 = function(data, region) {
     var year_max = 0;
     var margin = {top: 40, right: 10, bottom: 60, left: 80},
-      width2 = 1200 - margin.left - margin.right,
-      height2 = 620 - margin.top - margin.bottom;
+      width2 = 1300 - margin.left - margin.right,
+      height2 = 640 - margin.top - margin.bottom;
     var parseDate = d3.time.format("%Y").parse,
       formatPercent = d3.format(".0%");
 	  
 	//scales
     var x = d3.time.scale()
       .domain([2007,2011])
-      .range([0, width2 * .7]);
+      .range([0, width2 * .57]);
     var y = d3.scale.linear()
       .range([height2, 0]);
     var color = d3.scale.category20();
@@ -400,7 +399,7 @@
     areaSvg.append("text")
     .attr('x', width2/3)
     .attr('y', 0)
-    .text("NYC")
+    .text(region)
 	.style("font-size", "30px");
     
     areaSvg.append("text")
@@ -412,7 +411,7 @@
         
     areaSvg.append("text")
     .attr('x', width2/3)
-    .attr('y', height2 + margin.bottom)
+    .attr('y', height2 + margin.bottom - 15)
 	.attr("class", "alabel")
     .text("Year");
 	
@@ -542,27 +541,26 @@
     var labRadius = 5;
     var labelCircle = cause.append("circle")
     .attr("cx",function(d, i){ 
-		if((margin.top * 2 + labHeight * 1.4 *i)>height2){
-			return width2 - margin.right*5;
+		if((labHeight * 1.4 *i)>height2){
+			return width2*.57 + 255;
 		}
 		else{
-			return width2 - margin.right*8;
+			return width2*.57 + 15;
 		}
 	})
-	.attr("cy",function(d,i){ return (margin.top * 2 + labHeight * 1.4 *i)%height2; })
+	.attr("cy",function(d,i){ return (labHeight * 1.4 *i)%height2; })
 	.attr("r",labRadius);
 
     var labelText = cause.append("text")
 	.attr("x",function(d, i){ 
-		var wrapheight = margin.top * 2 + labHeight * 1.4 *i;
-		if(wrapheight>height2){
-			return width2 - margin.right*3
+		if((labHeight * 1.4 *i)>height2){
+			return width2*.57 + 265;
 		}
 		else{
-			return width2 - margin.right*7.5;
+			return width2*.57 + 25;
 		}
 	})
-	.attr("y",function(d,i){ return (margin.top * 2 + labHeight * 1.4 *i)%height2; })
+	.attr("y",function(d,i){ return (labHeight * 1.4 *i)%height2; })
 	.attr("dy",labRadius/2)
 	.attr("class", "arealegend")
 	.text(function(d){ return d.name; });
