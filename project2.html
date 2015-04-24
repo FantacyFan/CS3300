@@ -4,6 +4,7 @@
   <!-- Load the d3 library. -->
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
   <script src="http://d3js.org/topojson.v1.min.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
   
   <style>
     body { 
@@ -42,20 +43,106 @@
       overflow: hidden;
     }
     #areachart {
-      width: 50%;
-      text-align: center;
-      float: left;
+      width: 100%;
+      margin-bottom: 60px;
     }
     #charts {
-      width: 50%;
-      float: right;
+      width: 100%;
       text-align: center;
     }
   </style>
   
-  <script> 
-  var year_max = 0;
+<script>
+  //svg variables
+  var mapWidth = 850,
+    mapHeight = 530;
+        
+  //map variables
+  var projection = d3.geo.albersUsa().scale(1000).translate([mapWidth/2.1, mapHeight/2.1]);
+  var path = d3.geo.path().projection(projection); //path of USA
+  var regionByState = d3.map();
 
+  var statesCoord;
+  var states;
+  
+  d3.json("us.json", function(error, shapes) {  
+    statesCoord = topojson.feature(shapes, shapes.objects.states).features; //long/lat coordinates
+    
+    d3.csv("usregions.csv", function(error, rows) {
+      states = d3.map(rows,function(d){
+        return d.id;
+      })
+      var svg = d3.select("#usmap").append("svg")
+        .attr("width", mapWidth)
+        .attr("height", mapHeight);
+      
+      var statePaths = svg.append("g");
+    
+      statePaths.selectAll("path").data(statesCoord).enter()
+      .append("path").attr("d", path)
+      .attr("class",function(state){
+        var regionData = states.get(state.id);
+        if(states.get(state.id))
+            return states.get(state.id)['Region'];
+        else return '';
+      })
+      .style("fill", "#E6E6E6")
+      .style("stroke", "#ccc")
+      .on("mouseover", function() {
+        var regionName = d3.select(this).attr("class");
+        d3.selectAll("."+regionName)
+          .style("fill", "#d2d2d2");
+      })
+      .on('mouseout',function() {
+        var regionName = d3.select(this).attr("class");
+        d3.selectAll("."+regionName)
+          .style("fill", "#E6E6E6");
+      })
+      .on("click",function(d){
+          var regionName = d3.select(this).attr("class");
+          d3.csv("USDeathsProcessed.csv", function(error,row) {
+            var regionFilter;
+            if(regionName=="Northeast")
+              regionFilter = filterRegion(row,true,false,false,false);
+            else if (regionName=="West")
+              regionFilter = filterRegion(row,false,true,false,false);
+            else if (regionName=="Midwest")
+              regionFilter = filterRegion(row,false,false,true,false);
+            else if (regionName=="South")
+              regionFilter = filterRegion(row,false,false,false,true);
+          drawAreaChart2(regionFilter);
+          });
+          smoothScroll("#detail");
+      });
+      svg.append("circle")
+        .attr("transform",function() {
+            return "translate(" + projection([-74.0059700, 40.7142700]) + ")";
+          })
+        .attr("r",20)
+        .attr("id","nyc")
+        .style("fill","#69BFC7")
+        .style("opacity","0.8")
+        .on("mouseover", function(){
+          d3.select(this).style("fill","#4FA9B0");
+        })
+        .on("mouseout", function(){
+          d3.select(this).style("fill","#69BFC7");
+        })
+        .on("click", function() {
+          d3.csv("NYCDeaths.csv", function(error, rows) { 
+            drawAreaChart2(rows);
+          });
+          smoothScroll("#detail");
+        });
+    });
+  });
+  var smoothScroll = function(div) {
+    $("html,body").animate({
+      scrollTop: $(div).offset().top
+    }, 1000);  
+  };
+</script>
+  <script>
   //HELPER FUNCTIONS
   /** 
    * NE, W, ME, S should be booleans indicating whether to filter by that region
@@ -328,9 +415,10 @@
    * draws the cause area chart for count vs. year
    */
   var drawAreaChart2 = function(data) {
+    var year_max = 0;
     var margin = {top: 20, right: 20, bottom: 30, left: 50},
-      width2 = 460 - margin.left - margin.right,
-      height2 = 650 - margin.top - margin.bottom;
+      width2 = 650 - margin.left - margin.right,
+      height2 = 550 - margin.top - margin.bottom;
     var parseDate = d3.time.format("%Y").parse,
       formatPercent = d3.format(".0%");
     var x = d3.time.scale()
@@ -473,6 +561,10 @@
         d3.select(this).select("text").style("display", "inline");
         //draw line chart
         drawLineChart(data, r.name.trim());
+        //draw bar chart
+        var causeFilter = filterCause(data, r.name.trim());
+        drawBarChart(causeFilter,2007);
+        smoothScroll("#charts");
       })
       .on("mouseover", function() {
         d3.select(this).style("opacity", 1);
@@ -485,7 +577,7 @@
       .attr("transform", function(d) { 
         return "translate(" + x(d.value.date) + "," + y(d.value.y0 + d.value.y / 2) + ")"; 
       })
-      .attr("x", -6)
+      .attr("x", -0.6)
       .attr("dy", ".35em")
       .text(function(d) { return d.name; })
       .style("text-anchor", "end");
@@ -569,24 +661,30 @@
     .style("stroke", "black");
     
     //draw circles
-    var circles = causeSvg.selectAll().data(causeFilterCombined).enter().append("circle");
+    var circles = causeSvg.selectAll().data(causeFilterCombined).enter().append("circle").attr("class","bubble");
       
     circles.attr("cx", function(r) { return xScale(r.Year); })
     .attr("cy", function(r) { return yScale(r.Count); })
     .attr("r", function(r) {return 15;})
-    .style("fill","black")
-    .on("click", function(r) { 
+    .style("fill", function(r){ 
+      if (r.Year==2007) {
+        return "blue";
+      }else{
+        return "black";
+      }  
+    })
+    /*.on("click", function(r) { 
       d3.selectAll("circle").style("fill", "black");
       d3.select(this).style("fill", "blue");
       //draw bar chart
       drawBarChart(causeFilter, r.Year);
+    })*/
+    .on("mouseover", function(r) {
+      d3.selectAll(".bubble").style("fill","black");
+      d3.select(this).style("fill", "blue");
+      //draw bar chart
+      drawBarChart(causeFilter, r.Year);
     })
-    .on("mouseover", function() {
-      d3.select(this).style("opacity", .5);
-    })
-    .on("mouseout", function() {
-      d3.select(this).style("opacity", 1);
-    });
   };
   
   /**
@@ -678,106 +776,17 @@
   var causeSvg;
   var yearSvg;
   
-  d3.csv("NYCDeaths.csv", function(error, rows) { 
-    drawAreaChart2(rows);
-  });
   </script>
-  <script>
-  //svg variables
-  var mapWidth = 850,
-    mapHeight = 530;
-        
-  //map variables
-  var projection = d3.geo.albersUsa().scale(1000).translate([mapWidth/2.1, mapHeight/2.1]);
-  var path = d3.geo.path().projection(projection); //path of USA
-  var regionByState = d3.map();
 
-  var statesCoord;
-  var states;
-  
-  d3.json("us.json", function(error, shapes) {  
-    statesCoord = topojson.feature(shapes, shapes.objects.states).features; //long/lat coordinates
-    
-    d3.csv("usregions.csv", function(error, rows) {
-      states = d3.map(rows,function(d){
-        return d.id;
-      })
-      var svg = d3.select("#usmap").append("svg")
-        .attr("width", mapWidth)
-        .attr("height", mapHeight);
-      
-      var statePaths = svg.append("g");
-    
-      statePaths.selectAll("path").data(statesCoord).enter()
-      .append("path").attr("d", path)
-      .attr("class",function(state){
-        var regionData = states.get(state.id);
-        if(states.get(state.id))
-            return states.get(state.id)['Region'];
-        else return '';
-      })
-      .style("fill", "#E6E6E6")
-      .style("stroke", "#ccc")
-      .on("mouseover", function() {
-        var regionName = d3.select(this).attr("class");
-        d3.selectAll("."+regionName)
-          .style("fill", "#d2d2d2");
-      })
-      .on('mouseout',function() {
-        var regionName = d3.select(this).attr("class");
-        d3.selectAll("."+regionName)
-          .style("fill", "#E6E6E6");
-      })
-      .on("click",function(d){
-          d3.csv("USDeathsProcessed.csv", function(error,row) {
-            var regionName = d3.select(this).attr("class");
-            var regionFilter;
-            if(regionName=="Northeast")
-              regionFilter = filterRegion(row,true,false,false,false);
-            else if (regionName=="West")
-              regionFilter = filterRegion(row,false,true,false,false);
-            else if (regionName=="Midwest")
-              regionFilter = filterRegion(row,false,false,true,false);
-            else if (regionName=="South")
-              regionFilter = filterRegion(row,false,false,false,true);
-          drawAreaChart2(regionFilter);
-          });
-          d3.transition()
-          .delay(300)
-          .duration(1500)
-          .tween("scroll", scrollTween(document.body.getBoundingClientRect().height - window.innerHeight));
-      });
-      svg.append("circle")
-        .attr("transform",function() {
-            return "translate(" + projection([-74.0059700, 40.7142700]) + ")";
-          })
-        .attr("r",20)
-        .attr("id","nyc")
-        .style("fill","#69BFC7")
-        .style("opacity","0.8")
-        .on("mouseover", function(){
-          d3.select(this).style("fill","#4FA9B0");
-        })
-        .on("mouseout", function(){
-          d3.select(this).style("fill","#69BFC7");
-        });
-    });
-  });
-  function scrollTween(offset) {
-      return function() {
-    var i = d3.interpolateNumber(window.pageYOffset || document.documentElement.scrollTop, offset);
-    return function(t) { scrollTo(0, i(t)); };
-    };
-  }
-</script>
 </head>
 
 <body>
   <h1>Top Causes of Death in the U.S.</h1>
   <h5>Select a region or New York City from the map</h5>
   <div id="usmap"></div>
-  <div id="detail"></div>
-  <div id="areachart"></div>
-  <div id="charts"></div>
+  <div id="detail">
+    <div id="areachart"></div>
+    <div id="charts"></div>
+  </div>
 </body>
 </html>
