@@ -60,7 +60,7 @@
   
 <script>
   //svg variables
-  var mapWidth = 850,
+  var mapWidth = 1050,
     mapHeight = 530;
         
   //map variables
@@ -329,13 +329,13 @@
   var drawAreaChart2 = function(data) {
     var year_max = 0;
     var margin = {top: 20, right: 60, bottom: 30, left: 50},
-      width2 = 1050 - margin.left - margin.right,
-      height2 = 550 - margin.top - margin.bottom;
+      width2 = 1250 - margin.left - margin.right,
+      height2 = 700 - margin.top - margin.bottom;
     var parseDate = d3.time.format("%Y").parse,
       formatPercent = d3.format(".0%");
     var x = d3.time.scale()
       .domain([2007,2011])
-      .range([0, width2*0.6]);
+      .range([0, width2*0.5]);
     var y = d3.scale.linear()
       .range([height2, 0]);
     var color = d3.scale.category20();
@@ -468,11 +468,12 @@
                    .append("g")
                    .attr("class", "cause")
                    .style("fill",function(d,i){ return color(i); });
+    
     cause.append("path")
       .attr("d", function(d) { 
         console.log(d.values)
         return area(d.values); })
-      .style("fill", function(d) { return color(d.name); })     
+       
       .style("opacity", .5)
       .on("click", function(r) { 
         d3.select("path").selectAll("text").style("display", "none");
@@ -491,60 +492,35 @@
         d3.select(this).style("opacity", .5);
       });;
 
-      var labHeight = 15;
+    var labHeight = 10;
     var labRadius = 5;
     var labelCircle = cause.append("circle")
-            .attr("cx",function(d){ return width2 - margin.right*5.5; })
-            .attr("cy",function(d,i){ return margin.top * 2 + labHeight * i; })
+            .attr("cx",function(d, i){ 
+              if((margin.top * 2 + labHeight * 1.4 *i)>height2){
+                    return width2 - margin.right*3.5
+                  }
+                  else{
+                    return width2 - margin.right*8;
+                  }
+            })
+            .attr("cy",function(d,i){ return (margin.top * 2 + labHeight * 1.4 *i)%height2; })
             .attr("r",labRadius);
 
 
     var labelText = cause.append("text")
-              .attr("x",function(d){ return width2 - margin.right*2.5; })
-              .attr("y",function(d,i){ return margin.top * 2 + labHeight * i; })
+              .attr("x",function(d, i){ 
+                  var wrapheight = margin.top * 2 + labHeight * 1.4 *i;
+                  if(wrapheight>height2){
+                    return width2 - margin.right*1.5
+                  }
+                  else{
+                    return width2 - margin.right*6;
+                  }
+                })
+              .attr("y",function(d,i){ return (margin.top * 2 + labHeight * 1.4 *i)%height2; })
               .attr("dy",labRadius/2)
+              .attr("style","font-size:15px;")
               .text(function(d){ return d.name; });
-
-
-    // cause.append("text")
-    //   .datum(function(d) { 
-    //     return {name: d.name, value: d.values[d.values.length - 1]}; })
-    //   .attr("transform", function(d) { 
-    //     return "translate(" + x(d.value.date) + "," + y(d.value.y0 + d.value.y / 2) + ")"; 
-    //   })
-    //   .attr("x", 200)
-    //   .attr("dy", ".35em")
-    //   .text(function(d) { return d.name; })
-    //   .style("text-anchor", "end");
-
-    //draw legend 
-    // var legendRectSize = 18;
-    // var legendSpacing = 4;
-
-    // var legend = svg.selectAll('.legend')
-    // .data(color.domain())
-    // .enter()
-    // .append('g')
-    // .attr('class', 'legend')
-    // .attr('transform', function(d, i) {
-    //   var height = legendRectSize + legendSpacing;
-    //   var offset =  height * color.domain().length / 2;
-    //   var horz = -2 * legendRectSize;
-    //   var vert = i * height - offset;
-    //   return 'translate(' + horz + ',' + vert + ')';
-    // });
-
-    // legend.append('rect')
-    // .attr('width', legendRectSize)
-    // .attr('height', legendRectSize)
-    // .style('fill', color)
-    // .style('stroke', color);
-
-    // legend.append('text')
-    // .attr('x', legendRectSize + legendSpacing)
-    // .attr('y', legendRectSize - legendSpacing)
-    // .text(function(d) { return d; });
-
 
 
     areaSvg.append("g")
