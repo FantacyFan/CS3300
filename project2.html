@@ -10,7 +10,6 @@
     body { 
       font-family: 'Open Sans', sans-serif;
       background-color: #ffffff; 
-      margin-top: 60px;
     }   
     text {
       text-anchor: left;
@@ -32,7 +31,6 @@
     h1 {
       font-weight: lighter;
       text-align: center;
-      margin-bottom: 40px;
     }
     h5 {
       text-align: center;
@@ -56,6 +54,15 @@
     rect{
       stroke-width: 2;
     }
+	.bubble {
+		fill: rgb(105, 191, 199);
+		opacity: 0.6;
+	}
+	.alabel {	
+		font-weight: 600;
+		font-size: 16px;
+		color: rgb(185, 185, 185);
+	}
   </style>
   
 <script>
@@ -425,7 +432,15 @@
       }
       }
     }
-    keypoolarr.sort();
+	//sort data by causes alphabetically
+     keypoolarr.sort(function(a, b) {
+      if(a > b)
+        return 1;
+      else if(a < b)
+        return -1;
+      
+      return 0;
+    });
     var res = [];
     for (var key in tmp) {
       if (tmp.hasOwnProperty(key)) {
@@ -532,9 +547,9 @@
       .call(yAxis);
   };
     
-  var height = 320;
-  var width = 500;
-  var padding = 50;
+  var height = 500;
+  var width = 620;
+  var padding = 80;
   
   /**
    * draws the line chart for count vs. year
@@ -557,7 +572,7 @@
     .rangeRoundPoints([padding, width - padding], .3);
     
     var yScale = d3.scale.linear()
-    .domain([d3.min(causeFilterCombined, function(r) {return r.Count;}) - 20, d3.max(causeFilterCombined, function(r) {return r.Count;}) + 20])
+    .domain([d3.min(causeFilterCombined, function(r) {return r.Count;}), d3.max(causeFilterCombined, function(r) {return r.Count;})])
     .range([height - padding, padding]);
     
     //draw axis
@@ -576,21 +591,23 @@
     //draw title/labels
     causeSvg.append("text")
     .attr('x', width/2)
-    .attr('y', padding)
+    .attr('y', padding/2)
     .text(cause)
-    .style("font-weight", 600);
+	.style("font-size", "30px");
     
     causeSvg.append("text")
-    .attr('x', padding/2)
-    .attr('y', height/2)
-    .text("# of Deaths")
-    .style("font-weight", 600);
+    .attr('x', -height/2)
+    .attr('y', 20)
+	.attr("text-anchor", "end")	
+    .attr("transform", "rotate(-90)")	
+	.attr("class", "alabel")
+    .text("# of Deaths");
     
     causeSvg.append("text")
     .attr('x', width/2)
     .attr('y', height - padding/2)
-    .text("Year")
-    .style("font-weight", 600);
+	.attr("class", "alabel")	
+    .text("Year");
         
     //draw line
     var line = d3.svg.line()
@@ -600,30 +617,31 @@
     causeSvg.append("path")
     .attr("d", line(causeFilterCombined))
     .style("fill", "none")
-    .style("stroke", "black");
+    .style("stroke", "rgb(185, 185, 185)");
     
     //draw circles
     var circles = causeSvg.selectAll().data(causeFilterCombined).enter().append("circle").attr("class","bubble");
       
     circles.attr("cx", function(r) { return xScale(r.Year); })
     .attr("cy", function(r) { return yScale(r.Count); })
-    .attr("r", function(r) {return 15;})
-    .style("fill", function(r){ 
-      if (r.Year==2007) {
-        return "blue";
-      }else{
-        return "black";
-      }  
+    .attr("r", function(r) {return 20;})
+    .style("opacity", function(r){ 
+      //start with 2007 highlighted
+	  if (r.Year==2007) {
+        return 1;
+      } 
     })
-    /*.on("click", function(r) { 
-      d3.selectAll("circle").style("fill", "black");
-      d3.select(this).style("fill", "blue");
-      //draw bar chart
-      drawBarChart(causeFilter, r.Year);
-    })*/
     .on("mouseover", function(r) {
-      d3.selectAll(".bubble").style("fill","black");
-      d3.select(this).style("fill", "blue");
+      //highlight selection on hover
+	  d3.selectAll(".bubble")
+	  .style("opacity", .5)
+	  .style("stroke", "none");
+	  
+      d3.select(this)
+	  .style("opacity", 1)
+	  .style("stroke", "rgb(185, 185, 185)")
+	  .style("stroke-width", 2);
+	  
       //draw bar chart
       drawBarChart(causeFilter, r.Year);
     })
@@ -669,7 +687,7 @@
     .attr("width", barWidth)
     .attr("y", function(r) { return yScale(r.Count[0]); })
     .attr("height", function(r) { return height - padding - yScale(r.Count[0]); })
-    .attr("fill", "black");
+    .attr("fill", "rgb(45, 162, 173)");
     
     yearSvg.selectAll(".bar")
     .data(yearFilterCombined)
@@ -678,7 +696,7 @@
     .attr("width", barWidth)
     .attr("y", function(r) { return yScale(r.Count[1]); })
     .attr("height", function(r) { return height - padding - yScale(r.Count[1]); })
-    .attr("fill", "gray");
+    .attr("fill", "rgb(195, 88, 69)");
     
     //draw axis
     var xAxis = d3.svg.axis().scale(xScale)
@@ -698,19 +716,21 @@
     .attr('x', width/2)
     .attr('y', padding)
     .text(year)
-    .style("font-weight", 600);
+    .style("font-size", "30px");
     
     yearSvg.append("text")
-    .attr('x', padding/2)
-    .attr('y', height/2)
-    .text("# of Deaths")
-    .style("font-weight", 600);
+    .attr('x', -height/2)
+    .attr('y', 20)
+	.attr("text-anchor", "end")	
+    .attr("transform", "rotate(-90)")	
+	.attr("class", "alabel")
+    .text("# of Deaths");
     
-    yearSvg.append("text")
+     yearSvg.append("text")
     .attr('x', width/2)
     .attr('y', height - padding/2)
-    .text("Ethnicity")
-    .style("font-weight", 600); 
+	.attr("class", "alabel")	
+    .text("Ethnicity");
   };
   
   //PROCESS DATA
