@@ -10,10 +10,11 @@
     body { 
       font-family: 'Open Sans', sans-serif;
       background-color: #ffffff; 
+      margin-top: 30px;
     }   
     .arealegend {
       text-anchor: start;
-    font-size: 15px;
+    font-size: 14px;
     }
     .axis path { 
       fill: none; stroke: #777; 
@@ -33,12 +34,13 @@
       font-weight: lighter;
       text-align: center;
     }
-    h5 {
+    h3 {
       text-align: center;
-      margin-bottom: 0px;
+      margin-bottom: 10px;
     }
     #detail {
       margin-bottom: 90px;
+      padding-top: 10px;
     }
     #areachart {
       width: 100%;
@@ -557,9 +559,17 @@
     })
     .on("mouseover", function() {
         d3.select(this).style("opacity", 1);
+        d3.select(this.parentNode).select("circle").style("opacity",1);
+        d3.select(this.parentNode).select("text").style("opacity",1);
+        d3.select(this.parentNode).select("text").style("font-weight","bold");
+        d3.select(this.parentNode).select("text").style("font-size","16px");
     })
     .on("mouseout", function() {
         d3.select(this).style("opacity", .5);
+        d3.select(this.parentNode).select("circle").style("opacity",.5);
+        d3.select(this.parentNode).select("text").style("opacity",.5);
+        d3.select(this.parentNode).select("text").style("font-weight","normal");
+        d3.select(this.parentNode).select("text").style("font-size","14px");
     });
   //draw legend
     var labHeight = 10;
@@ -574,27 +584,83 @@
     }
   })
   .attr("cy",function(d,i){ return (labHeight * 1.4 *i)%height2; })
-  .attr("r",labRadius);
+  .attr("r",labRadius)
+  .style("opacity",.5)
+  .on("click", function(r) { 
+        d3.select("path").selectAll("text").style("display", "none");
+    
+        d3.select(this).select("text").style("display", "inline");
+    
+        //draw line chart
+        drawLineChart(data, r.name.trim());
+        //draw bar chart
+        var causeFilter = filterCause(data, r.name.trim());
+        drawBarChart(causeFilter,2007);
+        smoothScroll("#charts");
+    })
+    .on("mouseover", function() {
+        d3.select(this).style("opacity", 1);
+        d3.select(this.parentNode).select("path").style("opacity",1);
+        d3.select(this.parentNode).select("text").style("opacity",1);
+        d3.select(this.parentNode).select("text").style("font-weight","bold");
+        d3.select(this.parentNode).select("text").style("font-size","16px");
+    })
+    .on("mouseout", function() {
+        d3.select(this).style("opacity", .5);
+        d3.select(this.parentNode).select("path").style("opacity",.5);
+        d3.select(this.parentNode).select("text").style("opacity",.5);
+        d3.select(this.parentNode).select("text").style("font-weight","normal");
+        d3.select(this.parentNode).select("text").style("font-size","14px");
+    });
+
     var labelText = cause.append("text")
-  .attr("x",function(d, i){ 
-    if((labHeight * 1.4 *i)>height2){
-      return width2*.57 + 265;
-    }
-    else{
-      return width2*.57 + 25;
-    }
-  })
-  .attr("y",function(d,i){ return (labHeight * 1.4 *i)%height2; })
-  .attr("dy",labRadius/2)
-  .attr("class", "arealegend")
-  .text(function(d){ return d.name; });
-    areaSvg.append("g")
-  .attr("class", "x axis")
-  .attr("transform", "translate(0," + height2 + ")")
-  .call(xAxis);
-    areaSvg.append("g")
-  .attr("class", "y axis")
-  .call(yAxis);
+    .attr("x",function(d, i){ 
+      if((labHeight * 1.4 *i)>height2){
+        return width2*.57 + 265;
+      }
+      else{
+        return width2*.57 + 25;
+      }
+    })
+    .attr("y",function(d,i){ return (labHeight * 1.4 *i)%height2; })
+    .attr("dy",labRadius/2)
+    .style("opacity",.5)
+    .attr("class", "arealegend")
+    .text(function(d){ return d.name; })
+    .on("click", function(r) { 
+          d3.select("path").selectAll("text").style("display", "none");
+      
+          d3.select(this).select("text").style("display", "inline");
+      
+          //draw line chart
+          drawLineChart(data, r.name.trim());
+          //draw bar chart
+          var causeFilter = filterCause(data, r.name.trim());
+          drawBarChart(causeFilter,2007);
+          smoothScroll("#charts");
+      })
+      .on("mouseover", function() {
+          d3.select(this).style("opacity", 1);
+          d3.select(this).style("font-weight","bold");
+          d3.select(this).style("font-size","16px");
+          d3.select(this.parentNode).select("path").style("opacity",1);
+          d3.select(this.parentNode).select("circle").style("opacity",1);
+      })
+      .on("mouseout", function() {
+          d3.select(this).style("opacity", .5);
+          d3.select(this).style("font-weight","normal");
+          d3.select(this).style("font-size","14px");
+          d3.select(this.parentNode).select("path").style("opacity",.5);
+          d3.select(this.parentNode).select("circle").style("opacity",.5);
+      });
+
+      areaSvg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height2 + ")")
+    .call(xAxis);
+      areaSvg.append("g")
+    .attr("class", "y axis")
+    .call(yAxis);
   };
     
   var height = 620;
@@ -784,10 +850,12 @@
 
 <body>
   <h1>Top Causes of Death in the U.S.</h1>
-  <h5>Select a region or New York City from the map</h5>
+  <h3>Select a region or New York City from the map</h3>
   <div id="usmap"></div>
   <div id="detail">
-    <div id="areachart"></div>
+    <div id="areachart">
+    <h3>Select a cause of death</h3>
+    </div>
     <div id="charts"></div>
   </div>
 </body>
