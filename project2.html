@@ -10,7 +10,6 @@
     body { 
       font-family: 'Open Sans', sans-serif;
       background-color: #ffffff; 
-      margin-top: 30px;
     }   
     .arealegend {
       text-anchor: start;
@@ -39,13 +38,11 @@
       margin-bottom: 0px;
     }
     #detail {
-      margin-bottom: 30px;
-      overflow: hidden;
+      margin-bottom: 90px;
     }
     #areachart {
       width: 100%;
       margin-bottom: 60px;
-      padding-top: 30px;
     }
     #charts {
       width: 100%;
@@ -115,8 +112,6 @@
       .style("fill", "#E6E6E6")
       .style("stroke", "#ccc")
       .on("mouseover", function() {
-        //d3.select("#usmap").select("svg").select("g").selectAll("path").style("fill","#e6e6e6");
-        d3.select("#nyc").style("fill","#69BFC7");
         var regionName = d3.select(this).attr("class");
         d3.selectAll("."+regionName)
           .style("fill", "#d2d2d2");
@@ -153,10 +148,9 @@
         .attr("r",20)
         .attr("id","nyc")
         .style("fill","#69BFC7")
-        .style("opacity",.9)
+        .style("opacity","0.8")
         .on("mouseover", function(){
           d3.select(this).style("fill","#4FA9B0");
-          d3.select("#usmap").select("svg").select("g").selectAll("path").style("fill","#e6e6e6");
         })
         .on("mouseout", function(){
           d3.select(this).style("fill","#69BFC7");
@@ -178,7 +172,7 @@
   var smoothScroll = function(div) {
     $("html,body").animate({
       scrollTop: $(div).offset().top
-    }, 800);  
+    }, 1000);  
   };
   
   /** 
@@ -359,8 +353,8 @@
    */
   var drawAreaChart2 = function(data, region) {
 	//clear line/bar graphs
-	if(causeSvg != null) causeSvg.remove();
-	if(yearSvg != null) yearSvg.remove();
+	if(causeSvg != null) causeSvg.style("display", "none");
+	if(yearSvg != null) yearSvg.style("display", "none");
 	
     var year_max = 0;
     var margin = {top: 40, right: 10, bottom: 60, left: 80},
@@ -375,7 +369,7 @@
       .range([0, width2 * .57]);
     var y = d3.scale.linear()
       .range([height2, 0]);
-    var color = d3.scale.category20b();
+    var color = d3.scale.category20();
 	
 	//axis
     var xAxis = d3.svg.axis()
@@ -543,17 +537,9 @@
     })
     .on("mouseover", function() {
         d3.select(this).style("opacity", 1);
-        d3.select(this.parentNode).select("circle").style("fill",d3.select(this.parentNode).style("fill"));
-        d3.select(this.parentNode).select("text").style("fill",d3.select(this.parentNode).style("fill"));
-        //d3.select(this.parentNode).select("circle").style("opacity",1);
-        //d3.select(this.parentNode).select("text").style("opacity",1);
     })
     .on("mouseout", function() {
         d3.select(this).style("opacity", .5);
-        d3.select(this.parentNode).select("circle").style("fill","#d2d2d2");
-        d3.select(this.parentNode).select("text").style("fill","#d2d2d2");
-        //d3.select(this.parentNode).select("circle").style("opacity",.3);
-        //d3.select(this.parentNode).select("text").style("opacity",.3);
     });
 
 	//draw legend
@@ -569,35 +555,7 @@
 		}
 	})
 	.attr("cy",function(d,i){ return (labHeight * 1.4 *i)%height2; })
-	.attr("r",labRadius)
-  .style("fill","#d2d2d2")
-  .on("mouseover", function() {
-        /*d3.select(this).style("opacity", 1);
-        d3.select(this.parentNode).select("path").style("opacity",1);
-        d3.select(this.parentNode).select("text").style("opacity",1);*/
-        d3.select(this.parentNode).select("path").style("opacity",1);
-        d3.select(this).style("fill",d3.select(this.parentNode).style("fill"));
-        d3.select(this.parentNode).select("text").style("fill",d3.select(this.parentNode).style("fill"));
-    })
-    .on("mouseout", function() {
-        d3.select(this).style("opacity", .3);
-        /*d3.select(this.parentNode).select("path").style("opacity",.5);
-        d3.select(this.parentNode).select("text").style("opacity",.3);*/
-        d3.select(this).style("fill","#d2d2d2");
-        d3.select(this.parentNode).select("text").style("fill","#d2d2d2");
-    })
-    .on("click", function(r) { 
-        d3.select("path").selectAll("text").style("display", "none");
-    
-        d3.select(this).select("text").style("display", "inline");
-    
-        //draw line chart
-        drawLineChart(data, r.name.trim());
-        //draw bar chart
-        var causeFilter = filterCause(data, r.name.trim());
-        drawBarChart(causeFilter,2007);
-        smoothScroll("#charts");
-    });
+	.attr("r",labRadius);
 
     var labelText = cause.append("text")
 	.attr("x",function(d, i){ 
@@ -611,33 +569,7 @@
 	.attr("y",function(d,i){ return (labHeight * 1.4 *i)%height2; })
 	.attr("dy",labRadius/2)
 	.attr("class", "arealegend")
-  .style("fill","#d2d2d2")
-	.text(function(d){ return d.name; })
-  .on("mouseover", function() {
-        d3.select(this.parentNode).select("path").style("opacity",1);
-        d3.select(this).style("fill",d3.select(this.parentNode).style("fill"));
-        d3.select(this.parentNode).select("circle").style("fill",d3.select(this.parentNode).style("fill"));
-  })
-  .on("mouseout", function() {
-        /*d3.select(this).style("opacity", .3);
-        d3.select(this.parentNode).select("circle").style("opacity",.3);
-        d3.select(this.parentNode).select("path").style("opacity",.5);*/
-        d3.select(this.parentNode).select("path").style("opacity",.5);
-        d3.select(this).style("fill","#d2d2d2");
-        d3.select(this.parentNode).select("circle").style("fill","#d2d2d2");
-  })
-  .on("click", function(r) { 
-        d3.select("path").selectAll("text").style("display", "none");
-    
-        d3.select(this).select("text").style("display", "inline");
-    
-        //draw line chart
-        drawLineChart(data, r.name.trim());
-        //draw bar chart
-        var causeFilter = filterCause(data, r.name.trim());
-        drawBarChart(causeFilter,2007);
-        smoothScroll("#charts");
-  });
+	.text(function(d){ return d.name; });
 
     areaSvg.append("g")
 	.attr("class", "x axis")
@@ -663,9 +595,12 @@
       causeSvg = d3.select("#charts").append("svg")
       .attr("height", height)
       .attr("width", width);
+	  causeSvg.style("display", "inline");
     }   
-    else
+    else {
       causeSvg.selectAll("*").remove();
+	  causeSvg.style("display", "inline");
+	}
     
     //scales
     var xScale = d3.scale.ordinal()
@@ -756,9 +691,12 @@
       yearSvg = d3.select("#charts").append("svg")
       .attr("height", height)
       .attr("width", width);
+	  yearSvg.style("display", "inline");
     }
-    else
+    else {
       yearSvg.selectAll("*").remove();
+	  yearSvg.style("display", "inline");
+	}
     
     //scales
     var ethArray = new Array();
