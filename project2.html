@@ -1,14 +1,15 @@
 <html>
 <head>
-  <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
   <!-- Load the d3 library. -->
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
   <script src="http://d3js.org/topojson.v1.min.js"></script>
   
   <style>
     body { 
-      font-family: "Open Sans";
+      font-family: 'Open Sans', sans-serif;
       background-color: #ffffff; 
+      margin-top: 60px;
     }   
     text {
       text-anchor: middle;
@@ -22,14 +23,33 @@
     svg {
       font-size: 11px;
     }
-    #areachart{
-      width: 550px;
-      display: inline-block;
+    #usmap {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 60px;
     }
-    #charts{
-      width: 550px;
-      display: inline-block;
-      margin-top: 50px;
+    h1 {
+      font-weight: lighter;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    h5 {
+      text-align: center;
+      margin-bottom: 0px;
+    }
+    #detail {
+      margin-bottom: 60px;
+      overflow: hidden;
+    }
+    #areachart {
+      width:50%;
+      text-align: center;
+      float: left;
+    }
+    #charts {
+      width: 50%;
+      float: right;
+      text-align: center;
     }
   </style>
   
@@ -666,6 +686,7 @@
 
 <body>
   <div id="map"></div>
+  <div id="detail"></div>
   <div id="areachart"></div>
   <div id="charts"></div>
 </body>
