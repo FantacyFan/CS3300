@@ -11,8 +11,9 @@
       font-family: 'Open Sans', sans-serif;
       background-color: #ffffff; 
     }   
-    text {
-      text-anchor: left;
+    .arealegend {
+      text-anchor: start;
+	  font-size: 15px;
     }
     .axis path { 
       fill: none; stroke: #777; 
@@ -37,7 +38,7 @@
       margin-bottom: 0px;
     }
     #detail {
-      margin-bottom: 60px;
+      margin-bottom: 90px;
       overflow: hidden;
     }
     #areachart {
@@ -49,7 +50,7 @@
       text-align: center;
     }
     .legend {
-    font-size: 12px;
+		font-size: 12px;
     }
     rect{
       stroke-width: 2;
@@ -59,13 +60,22 @@
 		opacity: 0.6;
 	}
 	.alabel {	
-		font-weight: 600;
 		font-size: 16px;
 		color: rgb(185, 185, 185);
+		text-weight: 500;
+	}
+	text {
+		text-anchor: middle;
 	}
   </style>
   
 <script>
+  var mapSvg;	  
+  var areaSvg;
+  var causeSvg;
+  var yearSvg;
+
+  /////////////////DRAW INITIAL MAP/////////////////
   //svg variables
   var mapWidth = 1050,
     mapHeight = 530;
@@ -85,12 +95,13 @@
       states = d3.map(rows,function(d){
         return d.id;
       })
-      var svg = d3.select("#usmap").append("svg")
+      var mapSvg = d3.select("#usmap").append("svg")
         .attr("width", mapWidth)
         .attr("height", mapHeight);
       
-      var statePaths = svg.append("g");
+      var statePaths = mapSvg.append("g");
     
+	  //US regions
       statePaths.selectAll("path").data(statesCoord).enter()
       .append("path").attr("d", path)
       .attr("class",function(state){
@@ -123,11 +134,14 @@
               regionFilter = filterRegion(row,false,false,true,false);
             else if (regionName=="South")
               regionFilter = filterRegion(row,false,false,false,true);
-          drawAreaChart2(regionFilter);
+			  
+			drawAreaChart2(regionFilter);
           });
           smoothScroll("#detail");
       });
-      svg.append("circle")
+	  
+	  //NYC circle
+      mapSvg.append("circle")
         .attr("transform",function() {
             return "translate(" + projection([-74.0059700, 40.7142700]) + ")";
           })
@@ -149,14 +163,17 @@
         });
     });
   });
+  
+  /////////////////HELPER FUNCTIONS/////////////////
+  /**
+   * scrolls to the parameter div
+   */
   var smoothScroll = function(div) {
     $("html,body").animate({
       scrollTop: $(div).offset().top
     }, 1000);  
   };
-</script>
-  <script>
-  //HELPER FUNCTIONS
+  
   /** 
    * NE, W, ME, S should be booleans indicating whether to filter by that region
    * returns an array of the filtered data
@@ -335,17 +352,21 @@
    */
   var drawAreaChart2 = function(data) {
     var year_max = 0;
-    var margin = {top: 20, right: 60, bottom: 30, left: 50},
-      width2 = 1250 - margin.left - margin.right,
-      height2 = 700 - margin.top - margin.bottom;
+    var margin = {top: 40, right: 10, bottom: 60, left: 80},
+      width2 = 1200 - margin.left - margin.right,
+      height2 = 620 - margin.top - margin.bottom;
     var parseDate = d3.time.format("%Y").parse,
       formatPercent = d3.format(".0%");
+	  
+	//scales
     var x = d3.time.scale()
       .domain([2007,2011])
-      .range([0, width2*0.5]);
+      .range([0, width2 * .7]);
     var y = d3.scale.linear()
       .range([height2, 0]);
     var color = d3.scale.category20();
+	
+	//axis
     var xAxis = d3.svg.axis()
       .scale(x)
       .orient("bottom")
@@ -354,12 +375,16 @@
       .scale(y)
       .orient("left")
       .tickFormat(formatPercent);
+	  
+	//area/stack functions
     var area = d3.svg.area()
       .x(function(d) { return x(parseInt(d.date)); })
       .y0(function(d) { return y(d.y0); })
       .y1(function(d) { return y(d.y0 + d.y); });
     var stack = d3.layout.stack()
       .values(function(d) { return d.values; });
+	  
+	//make svg
     if(areaSvg == null) {
       areaSvg = d3.select("#areachart").append("svg")
       .attr("width", width2 + margin.left + margin.right)
@@ -371,28 +396,30 @@
     else
       areaSvg.selectAll("*").remove();
 
-      
+    //title/axis labels
     areaSvg.append("text")
-    .attr('x', width/2)
+    .attr('x', width2/3)
     .attr('y', 0)
     .text("NYC")
-    .style("font-weight", 600);
+	.style("font-size", "30px");
     
     areaSvg.append("text")
-    .attr('x', 0)
-    .attr('y', height2/2)
-    .text("# of Deaths")
-    .style("font-weight", 600);
-    
+    .attr('x', -height2/2)
+    .attr('y', -40)	
+    .attr("transform", "rotate(-90)")
+	.attr("class", "alabel")
+    .text("# of Deaths");
+        
     areaSvg.append("text")
-    .attr('x', width2/2)
+    .attr('x', width2/3)
     .attr('y', height2 + margin.bottom)
-    .text("Year")
-    .style("font-weight", 600);
+	.attr("class", "alabel")
+    .text("Year");
+	
+	//process data to correct format for area/stack functions
     var new_data = [];
     var tmp = {};
     new_data = data;
-    console.log(new_data);
    
     var yy = [];
     var c = [];
@@ -418,8 +445,6 @@
       }
     }
 
-
-
     var keypool = {};
     var keypoolarr = [];
     var idx = 0;
@@ -432,6 +457,7 @@
       }
       }
     }
+	
 	//sort data by causes alphabetically
      keypoolarr.sort(function(a, b) {
       if(a > b)
@@ -441,6 +467,7 @@
       
       return 0;
     });
+	
     var res = [];
     for (var key in tmp) {
       if (tmp.hasOwnProperty(key)) {
@@ -464,90 +491,92 @@
       }
       }
     }
+	
+	//draw area chart
     color.domain(keypoolarr);
     data.forEach(function(d) {
       return d.Year;
     });
     var causes = stack(color.domain().map(function(name) {
-      return {
-      name: name,
-      values: res.map(function(d) {
-        return {date: d.Year, y: d[name] / year_max};
-      })
-      };
+		return {
+			name: name,
+			values: res.map(function(d) {
+				return {date: d.Year, y: d[name] / year_max};
+			})
+		};
     }));
+	
     x.domain(d3.extent(res, function(d) { return d.Year; }));
-    var cause = areaSvg.selectAll(".cause")
-                   .data(causes)
-                   .enter()
-                   .append("g")
-                   .attr("class", "cause")
-                   .style("fill",function(d,i){ return color(i); });
+    
+	var cause = areaSvg.selectAll(".cause")
+    .data(causes)
+    .enter()
+    .append("g")
+    .attr("class", "cause")
+    .style("fill",function(d,i){ return color(i); });
     
     cause.append("path")
-      .attr("d", function(d) { 
-        console.log(d.values)
-        return area(d.values); })
-       
-      .style("opacity", .5)
-      .on("click", function(r) { 
+    .attr("d", function(d) { return area(d.values); })
+    .style("opacity", .5)
+    .on("click", function(r) { 
         d3.select("path").selectAll("text").style("display", "none");
+		
         d3.select(this).select("text").style("display", "inline");
+		
         //draw line chart
         drawLineChart(data, r.name.trim());
         //draw bar chart
         var causeFilter = filterCause(data, r.name.trim());
         drawBarChart(causeFilter,2007);
         smoothScroll("#charts");
-      })
-      .on("mouseover", function() {
+    })
+    .on("mouseover", function() {
         d3.select(this).style("opacity", 1);
-      })
-      .on("mouseout", function() {
+    })
+    .on("mouseout", function() {
         d3.select(this).style("opacity", .5);
-      });;
+    });
 
+	//draw legend
     var labHeight = 10;
     var labRadius = 5;
     var labelCircle = cause.append("circle")
-            .attr("cx",function(d, i){ 
-              if((margin.top * 2 + labHeight * 1.4 *i)>height2){
-                    return width2 - margin.right*3.5
-                  }
-                  else{
-                    return width2 - margin.right*8;
-                  }
-            })
-            .attr("cy",function(d,i){ return (margin.top * 2 + labHeight * 1.4 *i)%height2; })
-            .attr("r",labRadius);
-
+    .attr("cx",function(d, i){ 
+		if((margin.top * 2 + labHeight * 1.4 *i)>height2){
+			return width2 - margin.right*5;
+		}
+		else{
+			return width2 - margin.right*8;
+		}
+	})
+	.attr("cy",function(d,i){ return (margin.top * 2 + labHeight * 1.4 *i)%height2; })
+	.attr("r",labRadius);
 
     var labelText = cause.append("text")
-              .attr("x",function(d, i){ 
-                  var wrapheight = margin.top * 2 + labHeight * 1.4 *i;
-                  if(wrapheight>height2){
-                    return width2 - margin.right*3
-                  }
-                  else{
-                    return width2 - margin.right*7.5;
-                  }
-                })
-              .attr("y",function(d,i){ return (margin.top * 2 + labHeight * 1.4 *i)%height2; })
-              .attr("dy",labRadius/2)
-              .attr("style","font-size:15px;")
-              .text(function(d){ return d.name; });
-
+	.attr("x",function(d, i){ 
+		var wrapheight = margin.top * 2 + labHeight * 1.4 *i;
+		if(wrapheight>height2){
+			return width2 - margin.right*3
+		}
+		else{
+			return width2 - margin.right*7.5;
+		}
+	})
+	.attr("y",function(d,i){ return (margin.top * 2 + labHeight * 1.4 *i)%height2; })
+	.attr("dy",labRadius/2)
+	.attr("class", "arealegend")
+	.text(function(d){ return d.name; });
 
     areaSvg.append("g")
-      .attr("class", "x axis")
-      .attr("transform", "translate(0," + height2 + ")")
-      .call(xAxis);
+	.attr("class", "x axis")
+	.attr("transform", "translate(0," + height2 + ")")
+	.call(xAxis);
     areaSvg.append("g")
-      .attr("class", "y axis")
-      .call(yAxis);
+	.attr("class", "y axis")
+	.call(yAxis);
   };
     
-  var height = 500;
+  var height = 620;
   var width = 620;
   var padding = 80;
   
@@ -569,7 +598,7 @@
     //scales
     var xScale = d3.scale.ordinal()
     .domain([2007, 2008, 2009, 2010, 2011])
-    .rangeRoundPoints([padding, width - padding], .3);
+    .rangeRoundPoints([padding, width - padding], .6);
     
     var yScale = d3.scale.linear()
     .domain([d3.min(causeFilterCombined, function(r) {return r.Count;}), d3.max(causeFilterCombined, function(r) {return r.Count;})])
@@ -598,7 +627,6 @@
     causeSvg.append("text")
     .attr('x', -height/2)
     .attr('y', 20)
-	.attr("text-anchor", "end")	
     .attr("transform", "rotate(-90)")	
 	.attr("class", "alabel")
     .text("# of Deaths");
@@ -625,22 +653,19 @@
     circles.attr("cx", function(r) { return xScale(r.Year); })
     .attr("cy", function(r) { return yScale(r.Count); })
     .attr("r", function(r) {return 20;})
-    .style("opacity", function(r){ 
+    .style("fill", function(r){ 
       //start with 2007 highlighted
 	  if (r.Year==2007) {
-        return 1;
+        return "rgb(195, 88, 69)";
       } 
     })
     .on("mouseover", function(r) {
       //highlight selection on hover
 	  d3.selectAll(".bubble")
-	  .style("opacity", .5)
-	  .style("stroke", "none");
+	  .style("fill", "rgb(45, 162, 173)");
 	  
       d3.select(this)
-	  .style("opacity", 1)
-	  .style("stroke", "rgb(185, 185, 185)")
-	  .style("stroke-width", 2);
+	  .style("fill", "rgb(195, 88, 69)");
 	  
       //draw bar chart
       drawBarChart(causeFilter, r.Year);
@@ -687,7 +712,7 @@
     .attr("width", barWidth)
     .attr("y", function(r) { return yScale(r.Count[0]); })
     .attr("height", function(r) { return height - padding - yScale(r.Count[0]); })
-    .attr("fill", "rgb(45, 162, 173)");
+    .attr("fill", "rgb(105, 191, 199)");
     
     yearSvg.selectAll(".bar")
     .data(yearFilterCombined)
@@ -714,14 +739,13 @@
     //draw title/labels
     yearSvg.append("text")
     .attr('x', width/2)
-    .attr('y', padding)
-    .text(year)
+    .attr('y', padding/2)
+    .text(year)	
     .style("font-size", "30px");
     
     yearSvg.append("text")
     .attr('x', -height/2)
     .attr('y', 20)
-	.attr("text-anchor", "end")	
     .attr("transform", "rotate(-90)")	
 	.attr("class", "alabel")
     .text("# of Deaths");
@@ -732,11 +756,6 @@
 	.attr("class", "alabel")	
     .text("Ethnicity");
   };
-  
-  //PROCESS DATA
-  var areaSvg;
-  var causeSvg;
-  var yearSvg;
   
   </script>
 
