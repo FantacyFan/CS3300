@@ -134,6 +134,7 @@
             else if (regionName=="South")
               regionFilter = filterRegion(row,false,false,false,true);
 			  
+			//make area chart
 			drawAreaChart2(regionFilter, regionName);
           });
           smoothScroll("#detail");
@@ -156,6 +157,7 @@
         })
         .on("click", function() {
           d3.csv("NYCDeaths.csv", function(error, rows) { 
+			//make area chart
             drawAreaChart2(rows, "New York City");
           });
           smoothScroll("#detail");
@@ -350,6 +352,10 @@
    * draws the cause area chart for count vs. year
    */
   var drawAreaChart2 = function(data, region) {
+	//clear line/bar graphs
+	if(causeSvg != null) causeSvg.remove();
+	if(yearSvg != null) yearSvg.remove();
+	
     var year_max = 0;
     var margin = {top: 40, right: 10, bottom: 60, left: 80},
       width2 = 1300 - margin.left - margin.right,
@@ -710,7 +716,7 @@
     .attr("width", barWidth)
     .attr("y", function(r) { return yScale(r.Count[0]); })
     .attr("height", function(r) { return height - padding - yScale(r.Count[0]); })
-    .attr("fill", "rgb(105, 191, 199)");
+    .attr("fill", "rgb(195, 88, 69)");
     
     yearSvg.selectAll(".bar")
     .data(yearFilterCombined)
@@ -719,7 +725,7 @@
     .attr("width", barWidth)
     .attr("y", function(r) { return yScale(r.Count[1]); })
     .attr("height", function(r) { return height - padding - yScale(r.Count[1]); })
-    .attr("fill", "rgb(195, 88, 69)");
+    .attr("fill", "rgb(105, 191, 199)");
     
     //draw axis
     var xAxis = d3.svg.axis().scale(xScale)
@@ -753,6 +759,30 @@
     .attr('y', height - padding/2)
 	.attr("class", "alabel")	
     .text("Ethnicity");
+	
+	//draw legend
+	yearSvg.append("circle")
+    .attr('cx', 115)
+    .attr('cy', 115)	
+	.attr('r', 5)
+    .style("fill", "rgb(195, 88, 69)");
+	yearSvg.append("text")
+    .attr('x', 125)
+    .attr('y', 120)
+	.attr("class", "arealegend")
+    .text("Female");
+	
+	yearSvg.append("circle")
+    .attr('cx', 115)
+    .attr('cy', 135)	
+	.attr('r', 5)
+    .style("fill", "rgb(105, 191, 199)");
+	yearSvg.append("text")
+    .attr('x', 125)
+    .attr('y', 140)
+	.attr("class", "arealegend")
+    .text("Male");
+	
   };
   
   </script>
