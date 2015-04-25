@@ -357,6 +357,10 @@
    * draws the cause area chart for count vs. year
    */
   var drawAreaChart2 = function(data, region) {
+	//clear line/bar graphs
+	if(causeSvg != null) causeSvg.style("display", "none");
+	if(yearSvg != null) yearSvg.style("display", "none");
+	
     var year_max = 0;
     var margin = {top: 40, right: 10, bottom: 60, left: 80},
       width2 = 1300 - margin.left - margin.right,
@@ -678,9 +682,12 @@
       causeSvg = d3.select("#charts").append("svg")
       .attr("height", height)
       .attr("width", width);
+	  causeSvg.style("display", "inline");
     }   
-    else
+    else {
       causeSvg.selectAll("*").remove();
+	  causeSvg.style("display", "inline");
+	}
     
     //scales
     var xScale = d3.scale.ordinal()
@@ -771,9 +778,13 @@
       yearSvg = d3.select("#charts").append("svg")
       .attr("height", height)
       .attr("width", width);
+	  
+	  yearSvg.style("display", "inline");
     }
-    else
+    else {
       yearSvg.selectAll("*").remove();
+	  yearSvg.style("display", "inline");
+	}
     
     //scales
     var ethArray = new Array();
