@@ -48,7 +48,6 @@
     }
     #charts {
       width: 100%;
-      padding-top: 60px;
       text-align: center;
     }
     .legend {
@@ -386,33 +385,17 @@
   //area/stack functions
     var area = d3.svg.area()
       .x(function(d) { 
-        // console.log('1111111111111');
-        // console.log(d);
-        // console.log(d.date);
-        // console.log(parseInt(d.date));
-        // console.log(x(parseInt(d.date)));
         return x(parseInt(d.date)); })
       .y0(function(d) { 
-        //console.log(d);
-        //console.log('22222222222');
         if (isNaN(d.y0)) {
           d.y0 = 0;
         }
-        // console.log(d);
-        // console.log(d.y0);
-        // console.log(y(d.y0))
         
         return y(d.y0); })
       .y1(function(d) { 
-        //console.log('244444444');
         if (isNaN(d.y0)) {
           d.y0 = 0;
         }
-        // console.log(d);
-        // console.log(d.y0);
-        // console.log(d.y);
-        // console.log(d.y0 + d.y);
-        // console.log(y(d.y0 + d.y));
         
         return y(d.y0 + d.y); });
     var stack = d3.layout.stack()
@@ -573,8 +556,7 @@
         d3.select(this.parentNode).select("text").style("opacity",1);
         d3.select(this.parentNode).select("text").style("font-weight","bold");
         d3.select(this.parentNode).select("text").style("font-size","16px");
-		    console.log(r.values);
-		    d3.select("#tooltip").text(r.name).style("left", margin.left + 20).style("top", y(r.values[0].y0 + r.values[0].y) + mapHeight + margin.top + 130);
+		    d3.select("#tooltip").text(r.name).style("left", margin.left + 20).style("top", y(r.values[0].y0 + r.values[0].y) + mapHeight + margin.top + 180);
     })
     .on("mouseout", function() {
         d3.select(this).style("opacity", .5);
@@ -582,7 +564,8 @@
         d3.select(this.parentNode).select("text").style("opacity",.5);
         d3.select(this.parentNode).select("text").style("font-weight","normal");
         d3.select(this.parentNode).select("text").style("font-size","14px");
-    });
+    })
+	.style("cursor", "pointer");
   //draw legend
     var labHeight = 10;
     var labRadius = 5;
@@ -616,6 +599,7 @@
         d3.select(this.parentNode).select("text").style("opacity",1);
         d3.select(this.parentNode).select("text").style("font-weight","bold");
         d3.select(this.parentNode).select("text").style("font-size","16px");
+		d3.select("#tooltip").text(r.name.trim()).style("left", margin.left + 20).style("top", y(r.values[0].y0 + r.values[0].y) + mapHeight + margin.top + 180);
     })
     .on("mouseout", function() {
         d3.select(this).style("opacity", .5);
@@ -623,7 +607,8 @@
         d3.select(this.parentNode).select("text").style("opacity",.5);
         d3.select(this.parentNode).select("text").style("font-weight","normal");
         d3.select(this.parentNode).select("text").style("font-size","14px");
-    });
+    })
+	.style("cursor", "pointer");
 
     var labelText = cause.append("text")
     .attr("x",function(d, i){ 
@@ -651,12 +636,13 @@
           drawBarChart(causeFilter,2007);
           smoothScroll("#charts");
       })
-      .on("mouseover", function() {
+      .on("mouseover", function(r) {
           d3.select(this).style("opacity", 1);
           d3.select(this).style("font-weight","bold");
           d3.select(this).style("font-size","16px");
           d3.select(this.parentNode).select("path").style("opacity",1);
           d3.select(this.parentNode).select("circle").style("opacity",1);
+		  d3.select("#tooltip").text(r.name.trim()).style("left", margin.left + 20).style("top", y(r.values[0].y0 + r.values[0].y) + mapHeight + margin.top + 180);
       })
       .on("mouseout", function() {
           d3.select(this).style("opacity", .5);
@@ -664,7 +650,8 @@
           d3.select(this).style("font-size","14px");
           d3.select(this.parentNode).select("path").style("opacity",.5);
           d3.select(this.parentNode).select("circle").style("opacity",.5);
-      });
+      })
+	  .style("cursor", "pointer");
 
       areaSvg.append("g")
     .attr("class", "x axis")
@@ -812,7 +799,7 @@
     .attr("width", barWidth)
     .attr("y", function(r) { return yScale(r.Count[0]); })
     .attr("height", function(r) { return height - padding - yScale(r.Count[0]); })
-    .attr("fill", "rgb(105, 191, 199)");
+    .attr("fill", "rgb(195, 88, 69)");
     
     yearSvg.selectAll(".bar")
     .data(yearFilterCombined)
@@ -821,7 +808,7 @@
     .attr("width", barWidth)
     .attr("y", function(r) { return yScale(r.Count[1]); })
     .attr("height", function(r) { return height - padding - yScale(r.Count[1]); })
-    .attr("fill", "rgb(195, 88, 69)");
+    .attr("fill", "rgb(105, 191, 199)");
     
     //draw axis
     var xAxis = d3.svg.axis().scale(xScale)
@@ -855,6 +842,29 @@
     .attr('y', height - padding/2)
     .attr("class", "alabel")  
     .text("Ethnicity");
+	
+	//draw legend
+	yearSvg.append("circle")
+    .attr('cx', 115)
+    .attr('cy', 115)	
+	.attr('r', 5)
+    .style("fill", "rgb(195, 88, 69)");
+	yearSvg.append("text")
+    .attr('x', 125)
+    .attr('y', 120)
+	.attr("class", "arealegend")
+    .text("Female");
+	
+	yearSvg.append("circle")
+    .attr('cx', 115)
+    .attr('cy', 135)	
+	.attr('r', 5)
+    .style("fill", "rgb(105, 191, 199)");
+	yearSvg.append("text")
+    .attr('x', 125)
+    .attr('y', 140)
+	.attr("class", "arealegend")
+    .text("Male");
   };
   
   </script>
@@ -868,7 +878,6 @@
   
   <div id="detail">
     <div id="areachart">
-    <h3>Select a cause of death</h3>
     </div>
 		<div id="tooltip"> </div>
 	</div>
